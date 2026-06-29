@@ -371,7 +371,7 @@
             
             <p class="contact-info">
                 <span>•</span>
-                <span> support@kasihistimewa.org</span>
+                <span> support@kasihistimewa.com</span>
                 <span>•</span>
                 <span> www.kasihistimewa.com</span>
                 <span>•</span>
