@@ -322,13 +322,16 @@ use Carbon\Carbon;
         <!-- Search Participants -->
         <div class="mb-4">
             <input type="text" id="searchParticipant" 
-                   placeholder="Search participants by name or email..." 
-                   class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm">
+                placeholder="Search participants by name or email..." 
+                class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm">
         </div>
 
         <!-- Participants Table -->
         <div id="participants-container">
-            @include('admin.events.partials.participants-table', ['participants' => $participants])
+            @include('admin.events.partials.participants-table', [
+                'participants' => $participants,
+                'event' => $event  // ✅ This must be passed
+            ])
         </div>
     </div>
 </div>
@@ -481,6 +484,7 @@ use Carbon\Carbon;
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // The response includes the full HTML, which already has the event ID
                 document.getElementById('participants-container').innerHTML = data.html;
                 attachParticipantPaginationHandlers();
                 
@@ -1163,6 +1167,31 @@ use Carbon\Carbon;
     }
     #participants-container .pagination-link:hover {
         background-color: #f3f4f6;
+    }
+    
+    /* ─── FIX MAP Z-INDEX ────────────────────────────────────────────── */
+    #eventMap {
+        z-index: 1 !important;
+    }
+    .leaflet-control-container {
+        z-index: 2 !important;
+    }
+    .leaflet-top {
+        z-index: 2 !important;
+    }
+    .leaflet-bottom {
+        z-index: 2 !important;
+    }
+    
+    /* Fix header z-index */
+    header, nav, .fixed, .sticky {
+        z-index: 100 !important;
+        position: relative;
+    }
+    
+    /* Fix modal z-index */
+    .fixed.inset-0 {
+        z-index: 9999 !important;
     }
 </style>
 @endpush

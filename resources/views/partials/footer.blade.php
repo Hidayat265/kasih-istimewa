@@ -44,7 +44,7 @@
             <p class="mt-2 text-sm text-gray-500">
                 <i class="fas fa-phone-alt mr-2"></i> +60 13-883 4062
                 <span class="mx-2">|</span>
-                <i class="fas fa-envelope mr-2"></i> info@kasihistimewa.com
+                <i class="fas fa-envelope mr-2"></i> info@kasihistimewa.my
                 <span class="mx-2">|</span>
                 <i class="fas fa-map-marker-alt mr-2"></i> Shah Alam, Malaysia
             </p>

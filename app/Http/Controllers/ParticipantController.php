@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\User;
 use App\Models\Event;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ParticipantCancelled;
 
 class ParticipantController extends Controller
 {
@@ -160,12 +162,28 @@ class ParticipantController extends Controller
     
     
     
-    /**
+   /**
      * Admin cancel participant registration (via admin panel)
      */
     public function adminCancelParticipant(Request $request, $eventId)
     {
         try {
+            // ─── DEBUG: Log everything ──────────────────────────────────────────
+            \Log::info('=== ADMIN CANCEL PARTICIPANT DEBUG ===');
+            \Log::info('eventId parameter:', ['eventId' => $eventId]);
+            \Log::info('Request all data:', $request->all());
+            \Log::info('Request user_id:', ['user_id' => $request->user_id]);
+            
+            // Check if event exists with this ID
+            $eventCheck = Event::where('event_id', $eventId)->first();
+            \Log::info('Event found?', ['exists' => $eventCheck ? true : false]);
+            if ($eventCheck) {
+                \Log::info('Event data:', $eventCheck->toArray());
+            }
+            
+            // Check all events in database
+            $allEvents = Event::all();
+            \Log::info('All event IDs in database:', $allEvents->pluck('event_id')->toArray());
             // Check if user is admin
             if (!auth()->user()->is_admin) {
                 return response()->json([
@@ -175,54 +193,108 @@ class ParticipantController extends Controller
             }
             
             $request->validate([
-                'user_id' => 'required|string'
+                'user_id' => 'required|string',
+                'reason' => 'nullable|string|max:500'
+            ]);
+            
+            \Log::info('Admin cancel participant - Request received', [
+                'event_id' => $eventId,
+                'user_id' => $request->user_id,
+                'reason' => $request->reason
             ]);
             
             DB::beginTransaction();
             
-            // Find the participant using the composite key
+            // ─── FIX: Check if event exists using event_id column ──────────────
+            $event = Event::where('event_id', $eventId)->first();
+            if (!$event) {
+                DB::rollBack();
+                \Log::warning('Event not found', ['event_id' => $eventId]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Event not found.'
+                ], 404);
+            }
+            
+            // Check if the user exists
+            $participantUser = User::where('user_id', $request->user_id)->first();
+            if (!$participantUser) {
+                DB::rollBack();
+                \Log::warning('User not found', ['user_id' => $request->user_id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+            
+            // Find the participant
             $participant = Participant::where('event_id', $eventId)
                 ->where('user_id', $request->user_id)
-                ->where('participant_status', 'confirmed')
                 ->first();
+            
+            \Log::info('Participant search result', [
+                'found' => $participant ? true : false,
+                'event_id' => $eventId,
+                'user_id' => $request->user_id,
+            ]);
             
             if (!$participant) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Participant not found or already cancelled.'
+                    'message' => 'Participant not found. The user may not be registered for this event.'
                 ], 404);
             }
             
-            // Instead of $participant->update(), use a direct update with where clause
-            $updated = Participant::where('event_id', $eventId)
-                ->where('user_id', $request->user_id)
-                ->where('participant_status', 'confirmed')
-                ->update([
-                    'participant_status' => 'cancelled',
-                    'participant_cancelled_at' => now(),
-                    'participant_cancellation_reason' => $request->reason ?? 'Cancelled by administrator'
-                ]);
-            
-            if (!$updated) {
+            // Check if already cancelled
+            if ($participant->participant_status === 'cancelled') {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update participant status.'
-                ], 500);
+                    'message' => 'This participant is already cancelled.'
+                ], 400);
             }
             
+            // Update the participant
+            Participant::where('event_id', $eventId)
+            ->where('user_id', $request->user_id)
+            ->update([
+                'participant_status' => 'cancelled',
+                'participant_cancelled_at' => now(),
+                'participant_cancellation_reason' => $request->reason ?? 'Cancelled by administrator',
+            ]);
+            
             // Update event volunteer count
-            $event = Event::where('event_id', $eventId)->first();
-            if ($event) {
-                $event->updateVolunteerCount(-1);
-            }
+            $event->updateVolunteerCount(-1);
             
             DB::commit();
             
+            // ─── SEND EMAIL TO PARTICIPANT ──────────────────────────────────────
+            try {
+                $adminName = auth()->user()->user_name;
+                
+                Mail::to($participantUser->user_email)->send(new \App\Mail\ParticipantCancelled(
+                    $event,
+                    $participantUser,
+                    $request->reason,
+                    $adminName
+                ));
+                
+                \Log::info('Participant cancellation email sent', [
+                    'email' => $participantUser->user_email,
+                    'event_id' => $eventId,
+                    'user_id' => $request->user_id
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send cancellation email: ' . $e->getMessage(), [
+                    'event_id' => $eventId,
+                    'user_id' => $request->user_id
+                ]);
+            }
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Participant registration cancelled successfully.'
+                'message' => 'Participant registration cancelled successfully. A notification email has been sent to the participant.'
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -233,7 +305,9 @@ class ParticipantController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Admin cancel participant failed: ' . $e->getMessage());
+            Log::error('Admin cancel participant failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to cancel participant registration: ' . $e->getMessage()
@@ -363,14 +437,18 @@ class ParticipantController extends Controller
             if ($search) {
                 $query->whereHas('user', function($q) use ($search) {
                     $q->where('user_name', 'like', "%{$search}%")
-                      ->orWhere('user_email', 'like', "%{$search}%");
+                    ->orWhere('user_email', 'like', "%{$search}%");
                 });
             }
             
-            $participants = $query->orderBy('participant_registered_at', 'desc')->paginate(10);
+            $participants = $query->orderBy('participant_registered_at', 'desc')->paginate(10, ['*'], 'page', $page);
             
             if ($request->ajax() || $request->wantsJson()) {
-                $html = view('admin.events.partials.participants-table', compact('participants'))->render();
+                // ✅ Pass the event to the partial
+                $html = view('admin.events.partials.participants-table', [
+                    'participants' => $participants,
+                    'event' => $event
+                ])->render();
                 
                 return response()->json([
                     'success' => true,
@@ -399,7 +477,7 @@ class ParticipantController extends Controller
         }
     }
     
-    /**
+   /**
      * Get event participants for the admin show page (initial load)
      */
     public function getEventParticipantsForView($eventId)
@@ -411,6 +489,7 @@ class ParticipantController extends Controller
                 abort(403, 'Unauthorized action.');
             }
             
+            // Only fetch confirmed participants
             $participants = Participant::with('user')
                 ->where('event_id', $eventId)
                 ->where('participant_status', 'confirmed')

@@ -154,7 +154,7 @@
             
             <a href="{{ route('user.myEvents') }}" class="button" style="color: #FFFFFF; background: #554994;">📅 View My Events</a>
             
-            <p style="font-size: 13px; color: #888;">If you have any questions, please contact our support team at <strong>support@kasihistimewa.com</strong></p>
+            <p style="font-size: 13px; color: #888;">If you have any questions, please contact our support team at <strong>support@kasihistimewa.my</strong></p>
         </div>
         
         <div class="footer">

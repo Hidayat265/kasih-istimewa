@@ -217,7 +217,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // ========== PARTICIPANT MANAGEMENT ROUTES =========
     Route::get('/events/{id}/participants', [ParticipantController::class, 'getEventParticipants'])->name('events.participants');
-    Route::post('/events/{id}/cancel-participant', [ParticipantController::class, 'adminCancelParticipant'])->name('events.cancel-participant');
+    Route::post('/events/{eventId}/cancel-participant', [ParticipantController::class, 'adminCancelParticipant'])->name('events.cancel-participant');
     
     // ========== DONATION MANAGEMENT ROUTES ==========
 

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Participant extends Model
 {
     protected $table = 'participants';
+    public $incrementing = false;
+    protected $primaryKey = null; // signals "don't assume an id column"
     
     protected $fillable = [
         'event_id',
@@ -94,13 +96,14 @@ class Participant extends Model
     
     public function cancel(?string $reason = null): void
     {
-        $this->update([
-            'participant_status' => 'cancelled',
-            'participant_cancelled_at' => now(),
-            'participant_cancellation_reason' => $reason,
-        ]);
-        
-        // Update event participant count
+        static::where('event_id', $this->event_id)
+            ->where('user_id', $this->user_id)
+            ->update([
+                'participant_status' => 'cancelled',
+                'participant_cancelled_at' => now(),
+                'participant_cancellation_reason' => $reason,
+            ]);
+
         if ($this->event) {
             $this->event->updateVolunteerCount(-1);
         }
