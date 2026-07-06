@@ -64,13 +64,13 @@ class ToyyibpayController extends Controller
             }
 
             // 4. Call ToyyibPay API
-            $baseUrl = env('TOYYIBPAY_URI', 'https://dev.toyyibpay.com');
-            $userSecret = env('TOYYIBPAY_USER_SECRET_KEY');
-            $categoryCode = env('TOYYIBPAY_CATEGORY_CODE');
+            $baseUrl = config('services.toyyibpay.uri', 'https://dev.toyyibpay.com');
+            $userSecret = config('services.toyyibpay.user_secret');
+            $categoryCode = config('services.toyyibpay.category_code');
 
-            // Validate required env vars
+            // Validate required config values
             if (!$userSecret || !$categoryCode) {
-                Log::error('ToyyibPay: Missing configuration for TOYYIBPAY_USER_SECRET_KEY or TOYYIBPAY_CATEGORY_CODE', [
+                Log::error('ToyyibPay: Missing configuration for ToyyibPay service', [
                     'userSecret' => $userSecret ? 'set' : 'missing',
                     'categoryCode' => $categoryCode ? 'set' : 'missing'
                 ]);

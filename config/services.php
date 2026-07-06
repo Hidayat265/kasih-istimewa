@@ -40,4 +40,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'toyyibpay' => [
+        'uri' => env('TOYYIBPAY_URI', 'https://dev.toyyibpay.com'),
+        'user_secret' => env('TOYYIBPAY_USER_SECRET_KEY'),
+        'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+        'redirect_uri' => env('TOYYIBPAY_REDIRECT_URI'),
+    ],
+
 ];
