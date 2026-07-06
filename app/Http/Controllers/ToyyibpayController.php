@@ -65,7 +65,27 @@ class ToyyibpayController extends Controller
 
             // 4. Call ToyyibPay API
             $baseUrl = env('TOYYIBPAY_URI', 'https://dev.toyyibpay.com');
-            $url = $baseUrl . '/index.php/api/createBill';
+            $userSecret = env('TOYYIBPAY_USER_SECRET_KEY');
+            $categoryCode = env('TOYYIBPAY_CATEGORY_CODE');
+
+            // Validate required env vars
+            if (!$userSecret || !$categoryCode) {
+                Log::error('ToyyibPay: Missing configuration for TOYYIBPAY_USER_SECRET_KEY or TOYYIBPAY_CATEGORY_CODE', [
+                    'userSecret' => $userSecret ? 'set' : 'missing',
+                    'categoryCode' => $categoryCode ? 'set' : 'missing'
+                ]);
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'ToyyibPay is not configured. Missing credentials.'
+                    ], 500);
+                }
+
+                return back()->with('error', 'ToyyibPay is not configured. Missing credentials.');
+            }
+
+            $url = rtrim($baseUrl, '/') . '/index.php/api/createBill';
 
             // Shorten billName to max 30 characters
             $shortName = substr($request->donor_name, 0, 20);
@@ -76,8 +96,8 @@ class ToyyibpayController extends Controller
             }
 
             $billData = [
-                'userSecretKey' => env('TOYYIBPAY_USER_SECRET_KEY'),
-                'categoryCode' => env('TOYYIBPAY_CATEGORY_CODE'),
+                'userSecretKey' => $userSecret,
+                'categoryCode' => $categoryCode,
                 'billName' => $billName,
                 'billDescription' => 'Donation to Kasih Istimewa',
                 'billPriceSetting' => 1,
@@ -135,19 +155,23 @@ class ToyyibpayController extends Controller
                 return redirect()->away($paymentUrl);
             }
 
-            // Bill creation failed
+            // Bill creation failed - provide more diagnostic info
             Log::error('ToyyibPay: Bill creation failed', [
-                'response' => $result
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'decoded' => $result
             ]);
 
+            $message = 'Bill creation failed. Please check ToyyibPay configuration and API response.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bill creation failed. Please try again.'
+                    'message' => $message,
+                    'debug' => $result
                 ], 500);
             }
 
-            return back()->with('error', 'Bill creation failed. Please try again.');
+            return back()->with('error', $message);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('ToyyibPay: Validation error', [
