@@ -23,25 +23,34 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // ========== HOMEPAGE WITH DYNAMIC STATS ==========
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
-// ========== PAYMENT ROUTES ==========
+// ========== GUEST DONATION ROUTES (No Auth Required) ==========
+Route::get('/donate', function () {
+    return view('user.donation.donate');
+})->name('user.donate');
+
+// ========== DONATION PROCESSING ROUTES (AJAX) ==========
+Route::post('/donation/toyyibpay', [DonationController::class, 'processToyyibPay'])->name('donation.toyyibpay');
+Route::post('/donation/stripe', [DonationController::class, 'processStripe'])->name('donation.stripe');
+Route::post('/donation/process', [DonationController::class, 'processDonation'])->name('donation.process');
+
+// ========== TOYYIBPAY ROUTES ==========
 Route::get('/checkout', [ToyyibpayController::class, 'showCheckout'])->name('checkout');
 Route::post('/pay', [ToyyibpayController::class, 'createBill'])->name('pay.bill');
 Route::post('/payment/callback', [ToyyibpayController::class, 'handleCallback'])->name('payment.callback');
 Route::get('/payment/callback', [ToyyibpayController::class, 'handleCallback'])->name('payment.return');
 Route::view('/payment/status', 'payment_status')->name('payment.status');
 
-
 // ========== STRIPE PAYMENT ROUTES ==========
 Route::prefix('stripe')->name('stripe.')->group(function () {
-    Route::post('/create-checkout-session', [App\Http\Controllers\StripePaymentController::class, 'createCheckoutSession'])
+    Route::post('/create-checkout-session', [StripePaymentController::class, 'createCheckoutSession'])
         ->name('create-checkout-session');
-    Route::get('/success', [App\Http\Controllers\StripePaymentController::class, 'success'])
+    Route::get('/success', [StripePaymentController::class, 'success'])
         ->name('success');
-    Route::get('/cancel', [App\Http\Controllers\StripePaymentController::class, 'cancel'])
+    Route::get('/cancel', [StripePaymentController::class, 'cancel'])
         ->name('cancel');
-    Route::get('/donation-success', [App\Http\Controllers\StripePaymentController::class, 'showSuccess'])
+    Route::get('/donation-success', [StripePaymentController::class, 'showSuccess'])
         ->name('donation.success');
-    Route::get('/donation-failed', [App\Http\Controllers\StripePaymentController::class, 'showFailed'])
+    Route::get('/donation-failed', [StripePaymentController::class, 'showFailed'])
         ->name('donation.failed');
 });
 

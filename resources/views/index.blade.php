@@ -37,12 +37,12 @@
         }
 
         /* Remove spinner arrows ONLY for this input */
-        input#donor_phone_number::-webkit-inner-spin-button,
-        input#donor_phone_number::-webkit-outer-spin-button {
+        input#donor_phone::-webkit-inner-spin-button,
+        input#donor_phone::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        input#donor_phone_number {
+        input#donor_phone {
             -moz-appearance: textfield;
         }
 
@@ -296,9 +296,9 @@
                         </div>
 
                         <div data-aos="fade-up" data-aos-delay="300">
-                            <label for="donor_phone_number" class="block text-sm font-medium text-gray-700">Donor's Phone Number</label>
+                            <label for="donor_phone" class="block text-sm font-medium text-gray-700">Donor's Phone Number</label>
                             <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="tel" name="donor_phone_number" id="donor_phone_number"
+                                <input type="tel" name="donor_phone" id="donor_phone"
                                     class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
                                     placeholder="0123456789" required>
                             </div>

@@ -12,6 +12,10 @@ use App\Mail\DonationReceiptMail;
 use Spatie\Browsershot\Browsershot;
 use App\Traits\RecalculatesAllocations;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log; // <-- ADD THIS LINE
+use App\Http\Controllers\ToyyibpayController;
+use App\Http\Controllers\StripePaymentController;
+use Illuminate\Support\Facades\DB;
 
 class DonationController extends Controller
 {
@@ -91,10 +95,10 @@ class DonationController extends Controller
         ));
     }
 
-/**
- * Get donations data for AJAX with sorting, filtering, and pagination
- */
-public function getDonationsData(Request $request)
+    /**
+     * Get donations data for AJAX with sorting, filtering, and pagination
+     */
+    public function getDonationsData(Request $request)
     {
         $query = Donation::query();
         
@@ -210,122 +214,121 @@ public function getDonationsData(Request $request)
         ));
     }
 
-/**
- * Apply date range filter to query
- */
-private function applyDateRangeFilter($query, $request)
-{
-    $range = $request->date_range;
-    $startDate = $request->start_date;
-    $endDate = $request->end_date;
-    
-    switch ($range) {
-        case 'today':
-            $query->whereDate('created_at', today());
-            break;
-        case 'this_week':
-            $query->whereBetween('created_at', [
-                now()->startOfWeek(), 
-                now()->endOfWeek()
-            ]);
-            break;
-        case 'this_month':
-            $query->whereMonth('created_at', now()->month)
-                  ->whereYear('created_at', now()->year);
-            break;
-        case 'last_month':
-            $lastMonth = now()->subMonth();
-            $query->whereMonth('created_at', $lastMonth->month)
-                  ->whereYear('created_at', $lastMonth->year);
-            break;
-        case 'this_year':
-            $query->whereYear('created_at', now()->year);
-            break;
-        case 'custom':
-            if ($startDate && $endDate) {
-                try {
-                    $start = \Carbon\Carbon::parse($startDate)->startOfDay();
-                    $end = \Carbon\Carbon::parse($endDate)->endOfDay();
-                    $query->whereBetween('created_at', [$start, $end]);
-                } catch (\Exception $e) {
-                    // Invalid date format, ignore
-                }
-            }
-            break;
-    }
-}
-
-/**
- * Get user donations data for AJAX with sorting and pagination
- */
-public function getUserDonationsData(Request $request)
-{
-    $userEmail = auth()->user()->user_email;
-    
-    $search = $request->get('search', '');
-    $sort = $request->get('sort', 'created_at_desc');
-    $sortColumn = $request->get('sort_column', 'created_at');
-    $sortDirection = $request->get('sort_direction', 'desc');
-    
-    $query = Donation::where('donor_email', $userEmail);
-
-    // Apply search
-    if ($search) {
-        $query->where(function($q) use ($search) {
-            $q->where('donation_id', 'like', "%{$search}%")
-                ->orWhere('donor_name', 'like', "%{$search}%")
-                ->orWhere('donation_amount', 'like', "%{$search}%");
-        });
-    }
-    
-    // Apply sorting
-    $validSortColumns = ['donation_id', 'donation_amount', 'created_at', 'donation_payment_method', 'donation_received_by', 'donation_status'];
-    if (in_array($sortColumn, $validSortColumns)) {
-        $query->orderBy($sortColumn, $sortDirection);
-    } else {
-        $query->orderBy('created_at', 'desc');
-    }
-    
-    $donations = $query->paginate(10);
-    
-    // Calculate stats
-    $statsQuery = Donation::where('donor_email', $userEmail);
-    if ($search) {
-        $statsQuery->where(function($q) use ($search) {
-            $q->where('donation_id', 'like', "%{$search}%")
-                ->orWhere('donor_name', 'like', "%{$search}%")
-                ->orWhere('donation_amount', 'like', "%{$search}%");
-        });
-    }
-    
-    $totalDonations = $statsQuery->count();
-    $totalAmount = $statsQuery->where('donation_status', 'success')->sum('donation_amount');
-    $monthlyCount = $statsQuery->whereMonth('created_at', now()->month)
-        ->whereYear('created_at', now()->year)
-        ->count();
-    
-    if ($request->ajax() || $request->wantsJson()) {
-        $html = view('user.donation.partials.table-rows', compact('donations'))->render();
-        $paginationHtml = view('user.donation.partials.pagination', compact('donations'))->render();
+    /**
+     * Apply date range filter to query
+     */
+    private function applyDateRangeFilter($query, $request)
+    {
+        $range = $request->date_range;
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
         
-        return response()->json([
-            'success' => true,
-            'html' => $html,
-            'pagination' => $paginationHtml,
-            'from' => $donations->firstItem(),
-            'to' => $donations->lastItem(),
-            'total' => $donations->total(),
-            'stats' => [
-                'total_donations' => $totalDonations,
-                'total_amount' => $totalAmount,
-                'monthly_count' => $monthlyCount
-            ]
-        ]);
+        switch ($range) {
+            case 'today':
+                $query->whereDate('created_at', today());
+                break;
+            case 'this_week':
+                $query->whereBetween('created_at', [
+                    now()->startOfWeek(), 
+                    now()->endOfWeek()
+                ]);
+                break;
+            case 'this_month':
+                $query->whereMonth('created_at', now()->month)
+                      ->whereYear('created_at', now()->year);
+                break;
+            case 'last_month':
+                $lastMonth = now()->subMonth();
+                $query->whereMonth('created_at', $lastMonth->month)
+                      ->whereYear('created_at', $lastMonth->year);
+                break;
+            case 'this_year':
+                $query->whereYear('created_at', now()->year);
+                break;
+            case 'custom':
+                if ($startDate && $endDate) {
+                    try {
+                        $start = \Carbon\Carbon::parse($startDate)->startOfDay();
+                        $end = \Carbon\Carbon::parse($endDate)->endOfDay();
+                        $query->whereBetween('created_at', [$start, $end]);
+                    } catch (\Exception $e) {
+                        // Invalid date format, ignore
+                    }
+                }
+                break;
+        }
     }
-    
-    return view('user.donation.index', compact('donations', 'totalDonations', 'totalAmount', 'monthlyCount'));
-}
 
+    /**
+     * Get user donations data for AJAX with sorting and pagination
+     */
+    public function getUserDonationsData(Request $request)
+    {
+        $userEmail = auth()->user()->user_email;
+        
+        $search = $request->get('search', '');
+        $sort = $request->get('sort', 'created_at_desc');
+        $sortColumn = $request->get('sort_column', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+        
+        $query = Donation::where('donor_email', $userEmail);
+
+        // Apply search
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('donation_id', 'like', "%{$search}%")
+                    ->orWhere('donor_name', 'like', "%{$search}%")
+                    ->orWhere('donation_amount', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply sorting
+        $validSortColumns = ['donation_id', 'donation_amount', 'created_at', 'donation_payment_method', 'donation_received_by', 'donation_status'];
+        if (in_array($sortColumn, $validSortColumns)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        $donations = $query->paginate(10);
+        
+        // Calculate stats
+        $statsQuery = Donation::where('donor_email', $userEmail);
+        if ($search) {
+            $statsQuery->where(function($q) use ($search) {
+                $q->where('donation_id', 'like', "%{$search}%")
+                    ->orWhere('donor_name', 'like', "%{$search}%")
+                    ->orWhere('donation_amount', 'like', "%{$search}%");
+            });
+        }
+        
+        $totalDonations = $statsQuery->count();
+        $totalAmount = $statsQuery->where('donation_status', 'success')->sum('donation_amount');
+        $monthlyCount = $statsQuery->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('user.donation.partials.table-rows', compact('donations'))->render();
+            $paginationHtml = view('user.donation.partials.pagination', compact('donations'))->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'pagination' => $paginationHtml,
+                'from' => $donations->firstItem(),
+                'to' => $donations->lastItem(),
+                'total' => $donations->total(),
+                'stats' => [
+                    'total_donations' => $totalDonations,
+                    'total_amount' => $totalAmount,
+                    'monthly_count' => $monthlyCount
+                ]
+            ]);
+        }
+        
+        return view('user.donation.index', compact('donations', 'totalDonations', 'totalAmount', 'monthlyCount'));
+    }
 
     public function store(Request $request)
     {
@@ -681,5 +684,112 @@ public function getUserDonationsData(Request $request)
         
         // Download PDF file
         return $pdf->download('Donation_Receipt_' . ($donation->donation_id ?? $donation->id) . '.pdf');
+    }
+
+    /**
+     * Process donation (main entry point - handles both methods)
+     */
+    public function processDonation(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'donor_name' => 'required|string|max:255',
+                'donor_email' => 'required|email|max:255',
+                'donor_phone' => 'nullable|string|max:20',
+                'donation_amount' => 'required|numeric|min:1',
+                'payment_method' => 'required|in:toyyibpay,stripe',
+            ]);
+
+            $paymentMethod = $validated['payment_method'];
+            // Create a pending donation record first (so controllers can use it)
+            $donationId = $this->generateDonationId();
+
+            $user = User::where('user_email', $validated['donor_email'])->first();
+
+            $donation = Donation::create([
+                'donation_id' => $donationId,
+                'user_id' => $user ? $user->user_id : null,
+                'donor_name' => $validated['donor_name'],
+                'donor_email' => $validated['donor_email'],
+                'donor_phone' => $validated['donor_phone'] ?? null,
+                'donation_amount' => $validated['donation_amount'],
+                'donation_payment_method' => 'online',
+                'donation_transaction_id' => null,
+                'donation_received_by' => $paymentMethod === 'toyyibpay' ? 'ToyyibPay' : 'Stripe',
+                'donation_status' => 'pending',
+            ]);
+
+            // Merge necessary fields for gateway controllers
+            $request->merge([
+                'donation_id' => $donation->donation_id,
+                'amount' => $validated['donation_amount'],
+                'donor_name' => $validated['donor_name'],
+                'donor_email' => $validated['donor_email'],
+                'donor_phone' => $validated['donor_phone'] ?? null,
+            ]);
+
+            // Route to appropriate payment processor and return its response
+            if ($paymentMethod === 'toyyibpay') {
+                $controller = new ToyyibpayController();
+                return $controller->createBill($request);
+            } else {
+                $controller = new StripePaymentController();
+                return $controller->createCheckoutSession($request);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Donation Processing Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate sequential donation ID in format DON-0001, DON-0002, etc.
+     */
+    private function generateDonationId()
+    {
+        $row = Donation::whereRaw("donation_id REGEXP '^DON-[0-9]+$'")
+            ->select(DB::raw('MAX(CAST(SUBSTRING(donation_id,5) AS UNSIGNED)) as max'))
+            ->first();
+        $max = $row->max ?? 0;
+        $next = intval($max) + 1;
+        return 'DON-' . str_pad($next, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Export CSV
+     */
+    private function exportCSV($donations)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="donations_export.csv"',
+        ];
+        
+        $columns = ['Donation ID', 'Donor Name', 'Donor Email', 'Amount', 'Payment Method', 'Status', 'Date'];
+        
+        $callback = function() use ($donations, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            
+            foreach ($donations as $donation) {
+                fputcsv($file, [
+                    $donation->donation_id,
+                    $donation->donor_name,
+                    $donation->donor_email,
+                    $donation->donation_amount,
+                    $donation->donation_payment_method,
+                    $donation->donation_status,
+                    $donation->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -33,93 +33,155 @@
                 </div>
             @endif
 
-            <form action="{{ route('pay.bill') }}" method="POST" class="space-y-6" id="donationForm">
+            <form action="{{ route('donation.process') }}" method="POST" class="space-y-6" id="donationForm">
                 @csrf
 
-                <div>
-                    <label for="donor_name" class="block text-sm font-medium text-gray-700">Donor's Name</label>
-                    <div class="mt-1 relative rounded-md shadow-sm">
-                        <input type="text" name="donor_name" id="donor_name"
-                            value="{{ auth()->user()->user_name ?? '' }}"
-                            class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3 bg-gray-100 cursor-not-allowed"
-                            readonly required>
+                <!-- Donor Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="donor_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="text" name="donor_name" id="donor_name"
+                                value="{{ auth()->check() ? auth()->user()->user_name : old('donor_name') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif
+                                required>
+                        </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">This field is auto-filled from your profile</p>
-                </div>
 
-                <div>
-                    <label for="donor_email" class="block text-sm font-medium text-gray-700">Donor's Email</label>
-                    <div class="mt-1 relative rounded-md shadow-sm">
-                        <input type="email" name="donor_email" id="donor_email"
-                            value="{{ auth()->user()->user_email ?? '' }}"
-                            class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3 bg-gray-100 cursor-not-allowed"
-                            readonly required>
+                    <div>
+                        <label for="donor_email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="email" name="donor_email" id="donor_email"
+                                value="{{ auth()->check() ? auth()->user()->user_email : old('donor_email') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif
+                                required>
+                        </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">This field is auto-filled from your profile</p>
-                </div>
 
-                <div>
-                    <label for="donor_phone_number" class="block text-sm font-medium text-gray-700">Donor's Phone Number</label>
-                    <div class="mt-1 relative rounded-md shadow-sm">
-                        <input type="tel" name="donor_phone_number" id="donor_phone_number"
-                            value="{{ auth()->user()->user_phone_number ?? '' }}"
-                            class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3 bg-gray-100 cursor-not-allowed"
-                            readonly required>
+                    <div class="md:col-span-2">
+                        <label for="donor_phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="tel" name="donor_phone" id="donor_phone"
+                                value="{{ auth()->check() ? auth()->user()->user_phone_number : old('donor_phone') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif>
+                            <!-- Remove 'required' attribute -->
+                        </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">This field is auto-filled from your profile</p>
                 </div>
 
-                <div class="grid sm:grid-cols-3 gap-4">
-                    <button type="button"
-                        class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
-                        data-amount="10">
-                        RM10<span class="block text-sm font-normal">Essentials</span>
-                    </button>
+                <!-- Donation Amount -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Donation Amount</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="10">
+                            RM10<span class="block text-sm font-normal">Essentials</span>
+                        </button>
 
-                    <button type="button"
-                        class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
-                        data-amount="50">
-                        RM50<span class="block text-sm font-normal">Therapy Session</span>
-                    </button>
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="50">
+                            RM50<span class="block text-sm font-normal">Therapy Session</span>
+                        </button>
 
-                    <button type="button"
-                        class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
-                        data-amount="100">
-                        RM100<span class="block text-sm font-normal">Program Support</span>
-                    </button>
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="100">
+                            RM100<span class="block text-sm font-normal">Program Support</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div>
-                    <label for="amount" class="block text-sm font-medium text-gray-700">Custom Amount (RM)</label>
+                    <label for="donation_amount" class="block text-sm font-medium text-gray-700">Custom Amount (RM)</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <span class="text-gray-500 sm:text-sm">RM</span>
                         </div>
-                        <input type="number" name="amount" id="amount"
+                        <input type="number" name="donation_amount" id="donation_amount"
                             class="border focus:ring-primary focus:border-primary block w-full pl-10 pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
                             placeholder="Enter custom amount" min="1" step="0.01">
                     </div>
                     <p class="text-xs text-gray-500 mt-1">Minimum donation: RM 1.00</p>
                 </div>
 
-                <!-- Hidden field to store the amount from preset buttons -->
-                <input type="hidden" name="bill_amount" id="bill_amount" value="">
+                <!-- Payment Method Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Select Payment Method</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- ToyyibPay Option -->
+                        <label class="payment-method-card relative border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-primary/5 transition duration-150">
+                            <input type="radio" name="payment_method" value="toyyibpay" class="sr-only payment-method-radio" checked>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <i class="fas fa-credit-card text-primary text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">ToyyibPay</p>
+                                    <p class="text-xs text-gray-500">Pay via online banking</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-3 right-3">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-primary opacity-0 transition-opacity duration-200"></div>
+                                </div>
+                            </div>
+                        </label>
 
-                <div class="space-y-3">
-                    <button type="button" id="toyyibpay-btn"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-primary hover:bg-primary/90 transition duration-300 ease-in-out transform hover:scale-[1.01]">
-                        <i class="fas fa-credit-card mr-2"></i> Pay with ToyyibPay
-                    </button>
-
-                    <button type="button" id="stripe-btn"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-[#635bff] hover:bg-[#4a43d4] transition duration-300 ease-in-out transform hover:scale-[1.01]">
-                        <i class="fab fa-stripe mr-2"></i> Pay with Stripe
-                    </button>
+                        <!-- Stripe Option -->
+                        <label class="payment-method-card relative border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-primary/5 transition duration-150">
+                            <input type="radio" name="payment_method" value="stripe" class="sr-only payment-method-radio">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 flex items-center justify-center bg-[#635bff]/10 rounded-lg">
+                                    <i class="fab fa-stripe text-[#635bff] text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Stripe</p>
+                                    <p class="text-xs text-gray-500">Pay with credit/debit card</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-3 right-3">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-primary opacity-0 transition-opacity duration-200"></div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="donate-submit-btn"
+                    class="w-full flex justify-center py-4 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition duration-300 ease-in-out transform hover:scale-[1.01]">
+                    <i class="fas fa-heart mr-2"></i> Donate Now
+                </button>
 
                 <p class="text-xs text-gray-500 text-center mt-4">
                     <i class="fas fa-lock mr-1"></i> Your payment information is secure and encrypted
                 </p>
+
+                @guest
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            You are donating as a guest. 
+                            <a href="{{ route('login') }}" class="font-medium text-blue-700 underline hover:text-blue-900">Login</a> or 
+                            <a href="{{ route('register') }}" class="font-medium text-blue-700 underline hover:text-blue-900">Register</a> to track your donations.
+                        </p>
+                    </div>
+                @endguest
             </form>
         </div>
     </div>
@@ -186,7 +248,7 @@
 </section>
 
 @push('scripts')
-<!-- SweetAlert2 - Fixed CDN -->
+<!-- SweetAlert2 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.3/sweetalert2.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.3/sweetalert2.min.css">
 
@@ -194,11 +256,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Donation page loaded');
         
-        // Check if Swal is loaded
         if (typeof Swal === 'undefined') {
-            console.error('SweetAlert2 (Swal) is not loaded!');
-            alert('SweetAlert2 is not loaded. Please refresh the page or check your internet connection.');
+            console.error('SweetAlert2 not loaded!');
             return;
+        }
+
+        // ─── PAYMENT METHOD CARD SELECTION ──────────────────────────────
+        const paymentCards = document.querySelectorAll('.payment-method-card');
+        const paymentRadios = document.querySelectorAll('.payment-method-radio');
+        
+        function updatePaymentSelection(selectedRadio) {
+            paymentCards.forEach(card => {
+                card.classList.remove('border-primary', 'bg-primary/5');
+                card.classList.add('border-gray-200');
+                const dot = card.querySelector('.w-3\\.5.h-3\\.5.rounded-full');
+                if (dot) dot.classList.add('opacity-0');
+            });
+            
+            const parentCard = selectedRadio.closest('.payment-method-card');
+            if (parentCard) {
+                parentCard.classList.remove('border-gray-200');
+                parentCard.classList.add('border-primary', 'bg-primary/5');
+                const dot = parentCard.querySelector('.w-3\\.5.h-3\\.5.rounded-full');
+                if (dot) dot.classList.remove('opacity-0');
+            }
+        }
+        
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    updatePaymentSelection(this);
+                }
+            });
+        });
+        
+        // Set initial state
+        const checkedRadio = document.querySelector('.payment-method-radio:checked');
+        if (checkedRadio) {
+            updatePaymentSelection(checkedRadio);
         }
         
         // ─── PRESET AMOUNT BUTTONS ──────────────────────────────────────────
@@ -213,37 +308,19 @@
                 this.classList.remove('border-gray-200');
                 
                 const amount = this.getAttribute('data-amount');
-                document.getElementById('amount').value = amount;
-                document.getElementById('bill_amount').value = amount;
+                document.getElementById('donation_amount').value = amount;
             });
         });
         
-        // ─── CUSTOM AMOUNT INPUT ────────────────────────────────────────────
-        const customAmountInput = document.getElementById('amount');
-        if (customAmountInput) {
-            customAmountInput.addEventListener('input', function() {
-                document.querySelectorAll('.donation-amount-btn').forEach(b => {
-                    b.classList.remove('border-primary', 'bg-primary/10');
-                    b.classList.add('border-gray-200');
-                });
-                document.getElementById('bill_amount').value = this.value;
-            });
-        }
+        // ─── FORM SUBMISSION HANDLER ──────────────────────────────────────
+        const form = document.getElementById('donationForm');
+        const submitBtn = document.getElementById('donate-submit-btn');
         
-        // ─── TOYYIBPAY HANDLER ──────────────────────────────────────────────
-        document.getElementById('toyyibpay-btn').addEventListener('click', function(e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('ToyyibPay button clicked');
             
-            const amount = document.getElementById('amount').value;
-            const donorName = document.getElementById('donor_name').value;
-            const donorEmail = document.getElementById('donor_email').value;
-            const donorPhone = document.getElementById('donor_phone_number').value;
-            
-            console.log('Amount:', amount);
-            console.log('Donor:', donorName, donorEmail);
-            console.log('Phone:', donorPhone);
-            
+            // Validate amount
+            const amount = document.getElementById('donation_amount').value;
             if (!amount || amount < 1) {
                 Swal.fire({
                     icon: 'error',
@@ -254,68 +331,20 @@
                 return;
             }
             
-            // Show loading
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while we redirect you to ToyyibPay',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            // Create form data
-            const formData = new FormData();
-            formData.append('donor_name', donorName);
-            formData.append('donor_email', donorEmail);
-            formData.append('donor_phone_number', donorPhone);
-            formData.append('amount', amount);
-            formData.append('bill_amount', amount);
-            formData.append('received_by', 'ToyyibPay');
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
-            
-            // Create a new form and submit
-            const newForm = document.createElement('form');
-            newForm.method = 'POST';
-            newForm.action = '{{ route("pay.bill") }}';
-            
-            for (let [key, value] of formData.entries()) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = value;
-                newForm.appendChild(input);
-            }
-            
-            document.body.appendChild(newForm);
-            console.log('Submitting form to ToyyibPay');
-            newForm.submit();
-        });
-        
-        // ─── STRIPE HANDLER ──────────────────────────────────────────────────
-        document.getElementById('stripe-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Stripe button clicked');
-            
-            const amount = document.getElementById('amount').value;
-            const donorName = document.getElementById('donor_name').value;
-            const donorEmail = document.getElementById('donor_email').value;
-            const donorPhone = document.getElementById('donor_phone_number').value;
-            
-            console.log('Amount:', amount);
-            console.log('Donor:', donorName, donorEmail);
-            console.log('Phone:', donorPhone);
-            
-            if (!amount || amount < 1) {
+            // Get selected payment method
+            const selectedPayment = document.querySelector('.payment-method-radio:checked');
+            if (!selectedPayment) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Invalid Amount',
-                    text: 'Please select or enter a valid donation amount (minimum RM 1.00)',
+                    title: 'Payment Method Required',
+                    text: 'Please select a payment method (ToyyibPay or Stripe)',
                     confirmButtonColor: '#d33'
                 });
                 return;
             }
-
+            
+            const paymentMethod = selectedPayment.value;
+            
             // Show loading
             Swal.fire({
                 title: 'Processing...',
@@ -325,28 +354,27 @@
                     Swal.showLoading();
                 }
             });
-
+            
+            // Get form data
+            const formData = new FormData(this);
+            formData.append('payment_method', paymentMethod);
+            
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            console.log('CSRF Token:', csrfToken);
-
-            // Create Stripe Checkout Session
-            fetch('{{ route("stripe.create-checkout-session") }}', {
+            
+            // Endpoint: send to unified process route which creates donation and forwards to gateway
+            let endpoint = '{{ route("donation.process") }}';
+            
+            fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    amount: amount,
-                    donor_name: donorName,
-                    donor_email: donorEmail,
-                    donor_phone_number: donorPhone
-                })
+                body: formData
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 if (!response.ok) {
                     return response.json().then(err => {
                         throw new Error(err.message || 'Server error: ' + response.status);
@@ -355,17 +383,17 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 Swal.close();
                 
-                if (data.success) {
-                    console.log('Redirecting to Stripe:', data.url);
-                    window.location.href = data.url;
+                // Accept several possible redirect fields returned by different controllers
+                const redirectUrl = data.redirect_url || data.payment_url || data.url || data.checkout_url || data.checkout_session_url;
+                if (data.success && redirectUrl) {
+                    window.location.href = redirectUrl;
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Payment Error',
-                        text: data.message || 'Failed to create payment session. Please try again.',
+                        text: data.message || 'Failed to process payment. Please try again.',
                         confirmButtonColor: '#d33'
                     });
                 }
@@ -395,9 +423,12 @@
         display: none;
     }
     
-    .donation-amount-btn.active {
-        border-color: #554994;
-        background-color: rgba(85, 73, 148, 0.1);
+    .payment-method-card {
+        transition: all 0.2s ease;
+    }
+    
+    .payment-method-card .w-3\\.5.h-3\\.5.rounded-full {
+        transition: opacity 0.2s ease;
     }
     
     input:read-only {
@@ -406,4 +437,5 @@
     }
 </style>
 @endpush
+
 @endsection

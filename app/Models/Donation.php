@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use App\Models\User;
+
 
 class Donation extends Model
 {
@@ -24,48 +26,21 @@ class Donation extends Model
         'donation_received_by',
         'donation_transaction_id',
         'donation_status',
-        // Backward compatibility aliases
-        'amount',
-        'payment_method',
-        'received_by',
-        'transaction_id',
     ];
 
-    // Optional: cast donation amount to decimal
     protected $casts = [
         'donation_amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    public function getAmountAttribute()
-    {
-        return $this->attributes['donation_amount'] ?? null;
-    }
+    // Status constants
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_FAILED = 'failed';
+    const STATUS_REFUNDED = 'refunded';
 
-    public function setAmountAttribute($value)
-    {
-        $this->attributes['donation_amount'] = $value;
-    }
-
-    public function getPaymentMethodAttribute()
-    {
-        return $this->attributes['donation_payment_method'] ?? null;
-    }
-
-    public function setPaymentMethodAttribute($value)
-    {
-        $this->attributes['donation_payment_method'] = $value;
-    }
-
-    public function getReceivedByAttribute()
-    {
-        return $this->attributes['donation_received_by'] ?? null;
-    }
-
-    public function setReceivedByAttribute($value)
-    {
-        $this->attributes['donation_received_by'] = $value;
-    }
-
+    // Relations
     public function receivedByUser()
     {
         return $this->belongsTo(User::class, 'donation_received_by', 'user_id');
@@ -76,18 +51,57 @@ class Donation extends Model
         return $this->belongsTo(User::class, 'donor_email', 'user_email');
     }
 
+    // Accessors
     public function getReceivedByNameAttribute()
     {
-        return $this->receivedByUser?->user_name ?? $this->received_by;
+        return $this->receivedByUser?->user_name ?? $this->donation_received_by;
     }
 
-    public function getTransactionIdAttribute()
+    // Scopes
+    public function scopeCompleted($query)
     {
-        return $this->attributes['donation_transaction_id'] ?? null;
+        return $query->where('donation_status', self::STATUS_COMPLETED);
     }
 
-    public function setTransactionIdAttribute($value)
+    public function scopePending($query)
     {
-        $this->attributes['donation_transaction_id'] = $value;
+        return $query->where('donation_status', self::STATUS_PENDING);
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('donation_status', self::STATUS_FAILED);
+    }
+
+    // Helper methods
+    public function isCompleted()
+    {
+        return $this->donation_status === self::STATUS_COMPLETED;
+    }
+
+    public function isPending()
+    {
+        return $this->donation_status === self::STATUS_PENDING;
+    }
+
+    public function isFailed()
+    {
+        return $this->donation_status === self::STATUS_FAILED;
+    }
+
+    public function getStatusBadgeClass()
+    {
+        return match($this->donation_status) {
+            self::STATUS_COMPLETED => 'bg-green-100 text-green-800',
+            self::STATUS_PENDING => 'bg-yellow-100 text-yellow-800',
+            self::STATUS_FAILED => 'bg-red-100 text-red-800',
+            self::STATUS_REFUNDED => 'bg-gray-100 text-gray-800',
+            default => 'bg-gray-100 text-gray-800',
+        };
+    }
+
+    public function getFormattedAmount()
+    {
+        return 'RM ' . number_format($this->donation_amount, 2);
     }
 }
