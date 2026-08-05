@@ -148,15 +148,33 @@ class DonationAllocation extends Model
 
     public static function recalculateMonth($month)
     {
-        $allocations = self::where(
-            'allocation_month',
-            $month
-        )->get();
+        $allocations = self::where('allocation_month', $month)->get();
+
+        // A donation month without allocation rows inherits the latest prior
+        // month's percentages, so new donations are allocated immediately.
+        if ($allocations->isEmpty() && self::getMonthlyTotal($month) > 0) {
+            $previousMonth = self::where('allocation_month', '<', $month)
+                ->max('allocation_month');
+
+            if ($previousMonth) {
+                $previousAllocations = self::where('allocation_month', $previousMonth)->get();
+
+                foreach ($previousAllocations as $previousAllocation) {
+                    self::create([
+                        'allocation_category_id' => $previousAllocation->allocation_category_id,
+                        'allocation_month' => $month,
+                        'allocation_percent' => $previousAllocation->allocation_percent,
+                        'allocation_changed_by' => $previousAllocation->allocation_changed_by,
+                        'allocation_notes' => $previousAllocation->allocation_notes,
+                    ]);
+                }
+
+                $allocations = self::where('allocation_month', $month)->get();
+            }
+        }
 
         foreach ($allocations as $allocation) {
-
             $allocation->calculateAmount();
-
             $allocation->save();
         }
     }

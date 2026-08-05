@@ -254,7 +254,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0002',
                 'donor_name' => 'Adam Abdullah',
-                'donor_email' => 'adam@gmail.com',
+                'donor_email' => 'adam@kasihistimewa.my',
                 'donor_phone' => '01112345678',
                 'donation_amount' => 250.00,
                 'donation_payment_method' => 'cash',
@@ -267,7 +267,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0003',
                 'donor_name' => 'Alif Rosli',
-                'donor_email' => 'alif@gmail.com',
+                'donor_email' => 'alif@kasihistimewa.my',
                 'donor_phone' => '01334567890',
                 'donation_amount' => 75.50,
                 'donation_payment_method' => 'cash',
@@ -280,7 +280,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0004',
                 'donor_name' => 'Muhammad Daniel Bin Abdullah',
-                'donor_email' => 'daniel@gmail.com',
+                'donor_email' => 'daniel@kasihistimewa.my',
                 'donor_phone' => '0191234567',
                 'donation_amount' => 500.00,
                 'donation_payment_method' => 'cash',
@@ -293,7 +293,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0005',
                 'donor_name' => 'Nurul Afiqah Binti Zainal',
-                'donor_email' => 'afiqah@gmail.com',
+                'donor_email' => 'afiqah@kasihistimewa.my',
                 'donor_phone' => '0112345678',
                 'donation_amount' => 150.00,
                 'donation_payment_method' => 'cash',
@@ -306,7 +306,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0013',
                 'donor_name' => 'Sharifah Nurul Aida',
-                'donor_email' => 'sharifah@gmail.com',
+                'donor_email' => 'sharifah@kasihistimewa.my',
                 'donor_phone' => '0187654321',
                 'donation_amount' => 300.00,
                 'donation_payment_method' => 'cash',
@@ -334,7 +334,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0007',
                 'donor_name' => 'Sharifah Nurul Aida',
-                'donor_email' => 'sharifah@gmail.com',
+                'donor_email' => 'sharifah@kasihistimewa.my',
                 'donor_phone' => '0187654321',
                 'donation_amount' => 300.00,
                 'donation_payment_method' => 'online',
@@ -360,7 +360,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0009',
                 'donor_name' => 'Adam Abdullah',
-                'donor_email' => 'adam@gmail.com',
+                'donor_email' => 'adam@kasihistimewa.my',
                 'donor_phone' => '01112345678',
                 'donation_amount' => 75.00,
                 'donation_payment_method' => 'online',
@@ -388,7 +388,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0010',
                 'donor_name' => 'Alif Rosli',
-                'donor_email' => 'alif@gmail.com',
+                'donor_email' => 'alif@kasihistimewa.my',
                 'donor_phone' => '01334567890',
                 'donation_amount' => 200.00,
                 'donation_payment_method' => 'online',
@@ -414,7 +414,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0015',
                 'donor_name' => 'Muhammad Daniel Bin Abdullah',
-                'donor_email' => 'daniel@gmail.com',
+                'donor_email' => 'daniel@kasihistimewa.my',
                 'donor_phone' => '0191234567',
                 'donation_amount' => 85.00,
                 'donation_payment_method' => 'online',
@@ -427,7 +427,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0016',
                 'donor_name' => 'Nurul Afiqah Binti Zainal',
-                'donor_email' => 'afiqah@gmail.com',
+                'donor_email' => 'afiqah@kasihistimewa.my',
                 'donor_phone' => '0112345678',
                 'donation_amount' => 60.00,
                 'donation_payment_method' => 'online',
@@ -440,7 +440,7 @@ class DonationSeeder extends Seeder
             [
                 'donation_id' => 'DON-0017',
                 'donor_name' => 'Hidayat',
-                'donor_email' => 'hidayat@gmail.com',
+                'donor_email' => 'hidayat@kasihistimewa.my',
                 'donor_phone' => '0138834062',
                 'donation_amount' => 2000.00,
                 'donation_payment_method' => 'online',

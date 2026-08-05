@@ -396,7 +396,10 @@ use Carbon\Carbon;
     <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
         <h3 class="text-xl font-bold text-gray-800 mb-4">Reject Event</h3>
         <p class="text-gray-600 mb-4">Please provide a reason for rejecting this event:</p>
-        <textarea id="rejectReason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Enter rejection reason..."></textarea>
+        <textarea id="rejectReason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Enter rejection reason..." aria-describedby="rejectReasonError" oninput="clearRejectReasonError()"></textarea>
+        <p id="rejectReasonError" class="hidden mt-2 text-sm font-medium text-red-600" role="alert">
+            <i class="fas fa-exclamation-circle mr-1"></i>Please provide a reason for rejecting this event.
+        </p>
         <div class="flex justify-end gap-3 mt-4">
             <button onclick="closeRejectModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg transition">Cancel</button>
             <button onclick="confirmReject('{{ $event->event_id }}')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">Reject</button>
@@ -588,29 +591,42 @@ use Carbon\Carbon;
         });
     }
 
+    function clearRejectReasonError() {
+        const reasonInput = document.getElementById('rejectReason');
+        const reasonError = document.getElementById('rejectReasonError');
+        reasonError.classList.add('hidden');
+        reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        reasonInput.removeAttribute('aria-invalid');
+    }
+
     function showRejectModal(eventId) {
         document.getElementById('rejectModal').classList.remove('hidden');
         document.getElementById('rejectModal').classList.add('flex');
         document.getElementById('rejectReason').value = '';
+        clearRejectReasonError();
     }
 
     function closeRejectModal() {
         document.getElementById('rejectModal').classList.add('hidden');
         document.getElementById('rejectModal').classList.remove('flex');
+        clearRejectReasonError();
     }
 
     // Reject Event with SweetAlert
     function confirmReject(eventId) {
-        const reason = document.getElementById('rejectReason').value.trim();
+        const reasonInput = document.getElementById('rejectReason');
+        const reasonError = document.getElementById('rejectReasonError');
+        const reason = reasonInput.value.trim();
+
         if (!reason) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Reason Required',
-                text: 'Please provide a reason for rejecting this event.',
-                confirmButtonColor: '#554994'
-            });
+            reasonError.classList.remove('hidden');
+            reasonInput.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+            reasonInput.setAttribute('aria-invalid', 'true');
+            reasonInput.focus();
             return;
         }
+
+        clearRejectReasonError();
 
         Swal.fire({
             title: 'Reject Event?',
@@ -1192,6 +1208,11 @@ use Carbon\Carbon;
     /* Fix modal z-index */
     .fixed.inset-0 {
         z-index: 9999 !important;
+    }
+
+    /* Keep SweetAlert confirmations above custom admin modals. */
+    .swal2-container {
+        z-index: 10000 !important;
     }
 </style>
 @endpush

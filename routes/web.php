@@ -23,6 +23,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // ========== HOMEPAGE WITH DYNAMIC STATS ==========
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
+// ========== PUBLIC EVENT ROUTES (No Auth Required) ==========
+Route::get('/events/upcoming', [EventController::class, 'index'])->name('user.upcomingevents');
+Route::get('/events/public/{id}', [EventController::class, 'publicShow'])->name('events.public.show');
+
 // ========== GUEST DONATION ROUTES (No Auth Required) ==========
 Route::get('/donate', function () {
     return view('user.donation.donate');
@@ -39,6 +43,10 @@ Route::post('/pay', [ToyyibpayController::class, 'createBill'])->name('pay.bill'
 Route::post('/payment/callback', [ToyyibpayController::class, 'handleCallback'])->name('payment.callback');
 Route::get('/payment/callback', [ToyyibpayController::class, 'handleCallback'])->name('payment.return');
 Route::view('/payment/status', 'payment_status')->name('payment.status');
+Route::prefix('toyyibpay')->name('toyyibpay.')->group(function () {
+    Route::get('/donation-success', [ToyyibpayController::class, 'showSuccess'])->name('donation.success');
+    Route::get('/donation-failed', [ToyyibpayController::class, 'showFailed'])->name('donation.failed');
+});
 
 // ========== STRIPE PAYMENT ROUTES ==========
 Route::prefix('stripe')->name('stripe.')->group(function () {
@@ -104,18 +112,12 @@ Route::middleware('auth')->group(function () {
     // ========== DONATION ROUTES ==========
     Route::get('/donations', [DonationController::class, 'userDonations'])->name('user.donations');
     Route::get('/donations/data', [DonationController::class, 'getUserDonationsData'])->name('user.donations.data');
-    Route::get('/donate', function () {
-        return view('user.donation.donate');
-    })->name('user.donate');
 
     // Receipt Routes (Accessible by both user and admin)
     Route::get('/receipt/{donationId}/view', [DonationController::class, 'viewReceipt'])->name('donation.receipt');
     Route::get('/receipt/{donationId}/download', [DonationController::class, 'downloadReceipt'])->name('donation.receipt.download');
     
     // ========== EVENT ROUTES ==========
-    // Public event viewing (upcoming events - for volunteering)
-    Route::get('/events/upcoming', [EventController::class, 'index'])->name('user.upcomingevents');
-    
     // My Events (events created by the user)
     Route::get('/events/my-events', [EventController::class, 'myEvents'])->name('user.myEvents');
     Route::get('/events/my-events/data', [EventController::class, 'getMyEventsData'])->name('user.myEvents.data');
@@ -128,7 +130,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show');
     Route::get('/events/{id}/edit', [EventController::class, 'edit'])->name('events.edit');
     Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');
-    Route::get('/events/public/{id}', [EventController::class, 'publicShow'])->name('events.public.show');
     
     // AJAX routes for conflict checking
     Route::post('/events/get-booked-sessions-for-range', [EventController::class, 'getBookedSessionsForRange'])->name('events.getBookedSessionsForRange');

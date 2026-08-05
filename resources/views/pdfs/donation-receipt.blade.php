@@ -345,7 +345,7 @@
             </tr>
             <tr>
                 <td class="label">Transaction ID</td>
-                <td class="value" style="font-family: 'Courier New', monospace;">{{ $donation->transaction_id ?? 'N/A' }}</td>
+                <td class="value" style="font-family: 'Courier New', monospace;">{{ $donation->gateway_transaction_id ?? 'N/A' }}</td>
             </tr>
             <tr class="total-row">
                 <td class="label">Total Donation</td>

@@ -108,9 +108,6 @@ class StripePaymentController extends Controller
                 ],
             ]);
 
-            // Update donation with session ID
-            $donation->donation_transaction_id = $checkoutSession->id;
-            $donation->save();
 
             \Log::info('Stripe: Checkout session created', [
                 'session_id' => $checkoutSession->id,
@@ -122,7 +119,6 @@ class StripePaymentController extends Controller
                 'session_id' => $checkoutSession->id,
                 'url' => $checkoutSession->url,
                 'donation_id' => $donation->donation_id,
-                'transaction_id' => $checkoutSession->id,
             ]);
 
         } catch (\Stripe\Exception\ApiErrorException $e) {
@@ -177,25 +173,23 @@ class StripePaymentController extends Controller
                 $chargeId = $charge->id ?? null;
                 $receiptUrl = $charge->receipt_url ?? null;
 
-                // If donation already marked success for this transaction, avoid duplicate processing
-                $existingTid = $donation->donation_transaction_id;
-                // check if payment_intent already saved (supports JSON or string)
-                $alreadyProcessed = false;
-                if ($existingTid) {
-                    $decoded = null;
-                    try { $decoded = json_decode($existingTid, true); } catch (\Throwable $e) { $decoded = null; }
-                    if (is_array($decoded) && isset($decoded['payment_intent']) && $decoded['payment_intent'] === $paymentIntentId) {
-                        $alreadyProcessed = true;
-                    } elseif ($existingTid === $paymentIntentId) {
-                        $alreadyProcessed = true;
-                    }
-                }
+                // Support legacy JSON records for idempotency, then normalize to one ID.
+                $existingTransactionId = $donation->donation_transaction_id;
+                $legacyTransactionData = json_decode($existingTransactionId ?? '', true);
+                $alreadyProcessed = $donation->donation_status === 'success'
+                    && ($existingTransactionId === $paymentIntentId
+                        || (is_array($legacyTransactionData)
+                            && ($legacyTransactionData['payment_intent'] ?? null) === $paymentIntentId));
 
-                if ($donation->donation_status === 'success' && $alreadyProcessed) {
+                if ($alreadyProcessed) {
+                    if ($existingTransactionId !== $paymentIntentId) {
+                        $donation->donation_transaction_id = $paymentIntentId;
+                        $donation->save();
+                    }
+
                     \Log::info('Stripe: Donation already processed', [
                         'donation_id' => $donationId,
                         'payment_intent' => $paymentIntentId,
-                        'charge_id' => $chargeId,
                     ]);
 
                     return redirect()->route('stripe.donation.success')->with([
@@ -203,28 +197,13 @@ class StripePaymentController extends Controller
                         'donation_id' => $donation->donation_id,
                         'amount' => $donation->donation_amount,
                         'transaction_id' => $paymentIntentId,
-                        'charge_id' => $chargeId,
+                        'payment_gateway' => 'Stripe',
                     ]);
                 }
 
-                // Update donation status with transaction ID from Stripe and merge with existing
+                // Store only Stripe's final PaymentIntent transaction ID.
                 $donation->donation_status = 'success';
-                // Merge existing transaction data with payment_intent and charge
-                $existing = $donation->donation_transaction_id;
-                $data = [];
-                if ($existing) {
-                    $decoded = null;
-                    try { $decoded = json_decode($existing, true); } catch (\Throwable $e) { $decoded = null; }
-                    if (is_array($decoded)) {
-                        $data = $decoded;
-                    } else {
-                        $data['existing'] = $existing;
-                    }
-                }
-                $data['payment_intent'] = $paymentIntentId;
-                if ($chargeId) $data['charge_id'] = $chargeId;
-                if ($receiptUrl) $data['receipt_url'] = $receiptUrl;
-                $donation->donation_transaction_id = json_encode($data);
+                $donation->donation_transaction_id = $paymentIntentId;
                 $donation->save();
 
                 \Log::info('Stripe: Donation successful', [
@@ -242,7 +221,7 @@ class StripePaymentController extends Controller
                     'donation_id' => $donation->donation_id,
                     'amount' => $donation->donation_amount,
                     'transaction_id' => $paymentIntentId,
-                    'charge_id' => $chargeId,
+                    'payment_gateway' => 'Stripe',
                 ]);
                 
             } else {

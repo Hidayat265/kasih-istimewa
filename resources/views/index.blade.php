@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <!-- AOS Animation CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom Font and base styles */
         body {
@@ -154,9 +156,9 @@
 
                 <!-- Image -->
                 <div class="md:order-2 order-1 float-animation" data-aos="fade-left" data-aos-duration="1000">
-                    <img src="https://cdn.motherhood.com.my/wp-content/uploads/2022/12/22132138/support.jpg" 
-                         alt="A supportive environment for special needs individuals" 
-                         class="w-full h-auto max-h-96 object-cover rounded-2xl shadow-2xl" 
+                    <img src="https://cdn.motherhood.com.my/wp-content/uploads/2022/12/22132138/support.jpg"
+                         alt="A supportive environment for special needs individuals"
+                         class="w-full h-auto max-h-96 object-cover rounded-2xl shadow-2xl"
                          onerror="this.onerror=null; this.src='https://placehold.co/800x600/6b7280/ffffff?text=Hope+House+Care'"
                     />
                 </div>
@@ -173,7 +175,7 @@
                         <span class="text-sm font-medium text-primary">RM {{ number_format($stats['total_donations'] ?? 0, 0) }} / RM {{ number_format($stats['fundraising_goal'] ?? 500000, 0) }}</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-gradient-to-r from-primary to-secondary h-4 rounded-full transition-all duration-1000" 
+                        <div class="bg-gradient-to-r from-primary to-secondary h-4 rounded-full transition-all duration-1000"
                             style="width: {{ $stats['goal_progress'] ?? 0 }}%"></div>
                     </div>
                     <p class="text-xs text-gray-400 mt-1 text-right">{{ $stats['goal_progress'] ?? 0 }}% complete</p>
@@ -183,30 +185,30 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Funds Raised This Year -->
                     <div class="bg-white rounded-xl shadow-soft p-6 text-center" data-aos="zoom-in" data-aos-delay="100">
-                        <div class="stat-number text-3xl font-extrabold text-primary" 
-                            data-count="{{ $stats['funds_raised_this_year'] ?? 0 }}" 
+                        <div class="stat-number text-3xl font-extrabold text-primary"
+                            data-count="{{ $stats['funds_raised_this_year'] ?? 0 }}"
                             data-currency="RM">0</div>
                         <p class="mt-1 text-sm text-gray-500 font-medium">Funds Raised This Year</p>
                     </div>
 
                     <!-- Active Users -->
                     <div class="bg-white rounded-xl shadow-soft p-6 text-center" data-aos="zoom-in" data-aos-delay="150">
-                        <div class="stat-number text-3xl font-extrabold text-primary" 
+                        <div class="stat-number text-3xl font-extrabold text-primary"
                             data-count="{{ $stats['active_users'] ?? 0 }}">0</div>
                         <p class="mt-1 text-sm text-gray-500 font-medium">Active Users</p>
                     </div>
 
                     <!-- Events Hosted -->
                     <div class="bg-white rounded-xl shadow-soft p-6 text-center" data-aos="zoom-in" data-aos-delay="200">
-                        <div class="stat-number text-3xl font-extrabold text-primary" 
+                        <div class="stat-number text-3xl font-extrabold text-primary"
                             data-count="{{ $stats['events_hosted'] ?? 0 }}">0</div>
                         <p class="mt-1 text-sm text-gray-500 font-medium">Events Hosted</p>
                     </div>
 
                     <!-- Total Donations -->
                     <div class="bg-white rounded-xl shadow-soft p-6 text-center" data-aos="zoom-in" data-aos-delay="250">
-                        <div class="stat-number text-3xl font-extrabold text-primary" 
-                            data-count="{{ $stats['total_donations'] ?? 0 }}" 
+                        <div class="stat-number text-3xl font-extrabold text-primary"
+                            data-count="{{ $stats['total_donations'] ?? 0 }}"
                             data-currency="RM">0</div>
                         <p class="mt-1 text-sm text-gray-500 font-medium">Total Funds Raised</p>
                     </div>
@@ -274,81 +276,160 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('pay.bill') }}" method="POST" class="space-y-6">
-                        @csrf
+                    <form action="{{ route('donation.process') }}" method="POST" class="space-y-6" id="donationForm">
+                @csrf
 
-                        <div data-aos="fade-up" data-aos-delay="200">
-                            <label for="donor_name" class="block text-sm font-medium text-gray-700">Donor's Name</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="text" name="donor_name" id="donor_name"
-                                    class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
-                                    placeholder="Hidayat" required>
-                            </div>
+                <!-- Donor Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="donor_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="text" name="donor_name" id="donor_name"
+                                value="{{ auth()->check() ? auth()->user()->user_name : old('donor_name') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif
+                                required>
                         </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
+                    </div>
 
-                        <div data-aos="fade-up" data-aos-delay="250">
-                            <label for="donor_email" class="block text-sm font-medium text-gray-700">Donor's Email</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="email" name="donor_email" id="donor_email"
-                                    class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
-                                    placeholder="hidayat@example.com" required>
-                            </div>
+                    <div>
+                        <label for="donor_email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="email" name="donor_email" id="donor_email"
+                                value="{{ auth()->check() ? auth()->user()->user_email : old('donor_email') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif
+                                required>
                         </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
+                    </div>
 
-                        <div data-aos="fade-up" data-aos-delay="300">
-                            <label for="donor_phone" class="block text-sm font-medium text-gray-700">Donor's Phone Number</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="tel" name="donor_phone" id="donor_phone"
-                                    class="border focus:ring-primary focus:border-primary block w-full pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
-                                    placeholder="0123456789" required>
-                            </div>
+                    <div class="md:col-span-2">
+                        <label for="donor_phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="tel" name="donor_phone" id="donor_phone"
+                                value="{{ auth()->check() ? auth()->user()->user_phone_number : old('donor_phone') }}"
+                                class="border focus:ring-primary focus:border-primary block w-full sm:text-lg border-gray-300 rounded-lg p-3 @if(auth()->check()) bg-gray-100 cursor-not-allowed @endif"
+                                @if(auth()->check()) readonly @endif>
+                            <!-- Remove 'required' attribute -->
                         </div>
+                        @if(auth()->check())
+                            <p class="text-xs text-gray-500 mt-1">Auto-filled from your profile</p>
+                        @endif
+                    </div>
+                </div>
 
-                        <div class="grid sm:grid-cols-3 gap-4" data-aos="fade-up" data-aos-delay="350">
-                            <button type="button"
-                                class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150">
-                                RM10<span class="block text-sm font-normal">Essentials</span>
-                            </button>
-                            <button type="button"
-                                class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150">
-                                RM50<span class="block text-sm font-normal">Therapy Session</span>
-                            </button>
-                            <button type="button"
-                                class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150">
-                                RM100<span class="block text-sm font-normal">Program Support</span>
-                            </button>
+                <!-- Donation Amount -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Donation Amount</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="10">
+                            RM10<span class="block text-sm font-normal">Essentials</span>
+                        </button>
+
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="50">
+                            RM50<span class="block text-sm font-normal">Therapy Session</span>
+                        </button>
+
+                        <button type="button"
+                            class="donation-amount-btn border-2 border-gray-200 text-gray-700 rounded-xl p-4 font-semibold hover:border-primary hover:bg-primary/10 transition duration-150"
+                            data-amount="100">
+                            RM100<span class="block text-sm font-normal">Program Support</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="donation_amount" class="block text-sm font-medium text-gray-700">Custom Amount (RM)</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">RM</span>
                         </div>
+                        <input type="number" name="donation_amount" id="donation_amount"
+                            class="border focus:ring-primary focus:border-primary block w-full pl-10 pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
+                            placeholder="Enter custom amount" min="1" step="0.01">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Minimum donation: RM 1.00</p>
+                </div>
 
-                        <div data-aos="fade-up" data-aos-delay="400">
-                            <label for="amount" class="block text-sm font-medium text-gray-700">Custom Amount (RM)</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">RM</span>
+                <!-- Payment Method Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Select Payment Method</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- ToyyibPay Option -->
+                        <label class="payment-method-card relative border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-primary/5 transition duration-150">
+                            <input type="radio" name="payment_method" value="toyyibpay" class="sr-only payment-method-radio" checked>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <i class="fas fa-credit-card text-primary text-2xl"></i>
                                 </div>
-                                <input type="number" name="amount" id="amount"
-                                    class="border focus:ring-primary focus:border-primary block w-full pl-10 pr-12 sm:text-lg border-gray-300 rounded-lg p-3"
-                                    placeholder="100" min="1" required>
+                                <div>
+                                    <p class="font-semibold text-gray-800">ToyyibPay</p>
+                                    <p class="text-xs text-gray-500">Pay via online banking</p>
+                                </div>
                             </div>
-                        </div>
+                            <div class="absolute top-3 right-3">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-primary opacity-0 transition-opacity duration-200"></div>
+                                </div>
+                            </div>
+                        </label>
 
-                        <div data-aos="fade-up" data-aos-delay="450">
-                            <button type="submit" name="received_by" value="ToyyibPay"
-                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-primary hover:bg-primary transition duration-300 ease-in-out transform hover:scale-[1.01]">
-                                Pay with ToyyibPay
-                            </button>
-                        </div>
+                        <!-- Stripe Option -->
+                        <label class="payment-method-card relative border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-primary/5 transition duration-150">
+                            <input type="radio" name="payment_method" value="stripe" class="sr-only payment-method-radio">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 flex items-center justify-center bg-[#635bff]/10 rounded-lg">
+                                    <i class="fab fa-stripe text-[#635bff] text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Stripe</p>
+                                    <p class="text-xs text-gray-500">Pay with credit/debit card</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-3 right-3">
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-primary opacity-0 transition-opacity duration-200"></div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
 
-                        <div data-aos="fade-up" data-aos-delay="500">
-                            <button type="submit" name="received_by" value="Stripe"
-                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-secondary hover:bg-secondary transition duration-300 ease-in-out transform hover:scale-[1.01]">
-                                Pay with Stripe
-                            </button>
-                        </div>
-                    </form>
+                <!-- Submit Button -->
+                <button type="submit" id="donate-submit-btn"
+                    class="w-full flex justify-center py-4 px-4 border border-transparent rounded-full shadow-md text-lg font-medium text-white bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition duration-300 ease-in-out transform hover:scale-[1.01]">
+                    <i class="fas fa-heart mr-2"></i> Donate Now
+                </button>
+
+                <p class="text-xs text-gray-500 text-center mt-4">
+                    <i class="fas fa-lock mr-1"></i> Your payment information is secure and encrypted
+                </p>
+
+                @guest
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            You are donating as a guest.
+                            <a href="{{ route('login') }}" class="font-medium text-blue-700 underline hover:text-blue-900">Login</a> or
+                            <a href="{{ route('register') }}" class="font-medium text-blue-700 underline hover:text-blue-900">Register</a> to track your donations.
+                        </p>
+                    </div>
+                @endguest
+            </form>
                 </div>
             </div>
         </section>
-        
+
         <!-- Events Section -->
         <section id="events" class="py-20 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -359,13 +440,13 @@
                             @forelse($upcomingEvents ?? [] as $event)
                             <div class="swiper-slide h-full">
                                 <div class="bg-gray-50 rounded-lg shadow-lg overflow-hidden flex flex-col h-full">
-                                    <img src="{{ $event->event_picture ?? 'https://placehold.co/600x400/554994/ffffff?text=Event' }}" 
-                                         alt="{{ $event->event_name }}" 
+                                    <img src="{{ $event->event_picture ?? 'https://placehold.co/600x400/554994/ffffff?text=Event' }}"
+                                         alt="{{ $event->event_name }}"
                                          class="w-full h-48 object-cover"
                                          onerror="this.onerror=null; this.src='https://placehold.co/600x400/554994/ffffff?text=Event'">
                                     <div class="p-6 flex flex-col flex-grow">
                                         <p class="text-sm text-gray-500 mb-1">
-                                            {{ \Carbon\Carbon::parse($event->event_start_date)->format('M d, Y') }} 
+                                            {{ \Carbon\Carbon::parse($event->event_start_date)->format('M d, Y') }}
                                             | {{ $event->event_start_session }}
                                         </p>
                                         <h3 class="text-xl font-bold mb-2">{{ $event->event_name }}</h3>
@@ -406,11 +487,175 @@
     <!-- Footer -->
     @include('partials.footer')
 
+    <!-- Donation form behavior -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.3/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.3/sweetalert2.min.css">
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Donation page loaded');
+
+        if (typeof Swal === 'undefined') {
+            console.error('SweetAlert2 not loaded!');
+            return;
+        }
+
+        // â”€â”€â”€ PAYMENT METHOD CARD SELECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const paymentCards = document.querySelectorAll('.payment-method-card');
+        const paymentRadios = document.querySelectorAll('.payment-method-radio');
+
+        function updatePaymentSelection(selectedRadio) {
+            paymentCards.forEach(card => {
+                card.classList.remove('border-primary', 'bg-primary/5');
+                card.classList.add('border-gray-200');
+                const dot = card.querySelector('.w-3\\.5.h-3\\.5.rounded-full');
+                if (dot) dot.classList.add('opacity-0');
+            });
+
+            const parentCard = selectedRadio.closest('.payment-method-card');
+            if (parentCard) {
+                parentCard.classList.remove('border-gray-200');
+                parentCard.classList.add('border-primary', 'bg-primary/5');
+                const dot = parentCard.querySelector('.w-3\\.5.h-3\\.5.rounded-full');
+                if (dot) dot.classList.remove('opacity-0');
+            }
+        }
+
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    updatePaymentSelection(this);
+                }
+            });
+        });
+
+        // Set initial state
+        const checkedRadio = document.querySelector('.payment-method-radio:checked');
+        if (checkedRadio) {
+            updatePaymentSelection(checkedRadio);
+        }
+
+        // â”€â”€â”€ PRESET AMOUNT BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        document.querySelectorAll('.donation-amount-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.donation-amount-btn').forEach(b => {
+                    b.classList.remove('border-primary', 'bg-primary/10');
+                    b.classList.add('border-gray-200');
+                });
+
+                this.classList.add('border-primary', 'bg-primary/10');
+                this.classList.remove('border-gray-200');
+
+                const amount = this.getAttribute('data-amount');
+                document.getElementById('donation_amount').value = amount;
+            });
+        });
+
+        // â”€â”€â”€ FORM SUBMISSION HANDLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const form = document.getElementById('donationForm');
+        const submitBtn = document.getElementById('donate-submit-btn');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate amount
+            const amount = document.getElementById('donation_amount').value;
+            if (!amount || amount < 1) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Amount',
+                    text: 'Please select or enter a valid donation amount (minimum RM 1.00)',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            // Get selected payment method
+            const selectedPayment = document.querySelector('.payment-method-radio:checked');
+            if (!selectedPayment) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Method Required',
+                    text: 'Please select a payment method (ToyyibPay or Stripe)',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            const paymentMethod = selectedPayment.value;
+
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we prepare your payment',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Get form data
+            const formData = new FormData(this);
+            formData.append('payment_method', paymentMethod);
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            // Endpoint: send to unified process route which creates donation and forwards to gateway
+            let endpoint = '{{ route("donation.process") }}';
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Server error: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.close();
+
+                // Accept several possible redirect fields returned by different controllers
+                const redirectUrl = data.redirect_url || data.payment_url || data.url || data.checkout_url || data.checkout_session_url;
+                if (data.success && redirectUrl) {
+                    window.location.href = redirectUrl;
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Error',
+                        text: data.message || 'Failed to process payment. Please try again.',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Something went wrong. Please try again.',
+                    confirmButtonColor: '#d33'
+                });
+            });
+        });
+    });
+</script>
+
     <!-- Swiper JS -->
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <!-- AOS Animation JS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize AOS
@@ -420,7 +665,7 @@
                 offset: 50
             });
 
-            const amountInput = document.getElementById('amount');
+            const amountInput = document.getElementById('donation_amount');
             const donationButtons = document.querySelectorAll('.donation-amount-btn');
             const statNumbers = document.querySelectorAll('.stat-number');
 
@@ -466,9 +711,9 @@
                                 clearInterval(counter);
                                 formattedValue = finalValue.toLocaleString('en-US');
                             }
-                            
+
                             target.textContent = (currency === 'RM' ? 'RM' : '') + formattedValue;
-                            
+
                         }, frameDuration);
 
                         observer.unobserve(target);
@@ -518,7 +763,7 @@
         document.querySelectorAll('.donation-amount-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const amount = button.textContent.replace(/\D/g, '');
-                document.getElementById('amount').value = amount;
+                document.getElementById('donation_amount').value = amount;
             });
         });
     </script>

@@ -26,8 +26,33 @@
 
             <!-- Desktop Menu -->
             <nav class="flex justify-center space-x-6 lg:space-x-10 whitespace-nowrap">
+
+                <a href="{{ route('home') }}" class="text-base font-medium text-gray-500 hover:text-primary inline-block">Homepage</a>
+
                 <a href="{{ route('dashboard') }}" class="text-base font-medium text-gray-500 hover:text-primary inline-block">Dashboard</a>
-                <a href="{{ route('user.donations') }}" class="text-base font-medium text-gray-500 hover:text-primary inline-block">My Donation</a>
+                @auth
+                <!-- Donations Dropdown -->
+                <div class="relative group inline-block">
+                    <button class="text-base font-medium text-gray-500 hover:text-primary focus:outline-none flex items-center space-x-1 whitespace-nowrap">
+                        <span>Donations</span>
+                        <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <a href="{{ route('user.donations') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary">
+                            <i class="fas fa-hand-holding-heart mr-2 text-secondary"></i> My Donation
+                        </a>
+                        <a href="{{ route('user.donate') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary">
+                            <i class="fas fa-plus-circle mr-2 text-green-500"></i> Add Donation
+                        </a>
+                    </div>
+                </div>
+                @else
+                    <a href="{{ route('home') }}#donate" class="text-base font-medium text-gray-500 hover:text-primary inline-block">
+                        Add Donation
+                    </a>
+                @endauth
                 
                 <!-- Events Dropdown -->
                 <div class="relative group inline-block">
@@ -50,7 +75,6 @@
                     </div>
                 </div>
                 
-                <a href="#" class="text-base font-medium text-gray-500 hover:text-primary inline-block">Volunteers</a>
             </nav>
 
             <!-- Desktop Auth - Avatar with Dropdown -->
@@ -94,9 +118,31 @@
             <a href="{{ route('dashboard') }}" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
                 <i class="fas fa-tachometer-alt mr-3 text-primary w-5"></i> Dashboard
             </a>
-            <a href="{{ route('user.donations') }}" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                <i class="fas fa-hand-holding-heart mr-3 text-secondary w-5"></i> My Donation
-            </a>
+            @auth
+            <!-- Mobile Donations Section -->
+            <div>
+                <button id="mobileDonationsBtn" class="w-full flex items-center justify-between py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                    <div>
+                        <i class="fas fa-hand-holding-heart mr-3 text-secondary w-5"></i> Donations
+                    </div>
+                    <svg id="mobileDonationsIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="mobileDonationsSubmenu" class="hidden ml-8 space-y-1 border-l-2 border-gray-200 pl-4">
+                    <a href="{{ route('user.donations') }}" class="block py-2 px-4 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                        <i class="fas fa-list mr-2 text-secondary"></i> My Donation
+                    </a>
+                    <a href="{{ route('user.donate') }}" class="block py-2 px-4 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                        <i class="fas fa-plus-circle mr-2 text-green-500"></i> Add Donation
+                    </a>
+                </div>
+            </div>
+            @else
+                <a href="{{ route('home') }}#donate" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                    <i class="fas fa-plus-circle mr-3 text-green-500 w-5"></i> Add Donation
+                </a>
+            @endauth
             
             <!-- Mobile Events Section -->
             <div>
@@ -121,8 +167,8 @@
                 </div>
             </div>
             
-            <a href="#" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                <i class="fas fa-users mr-3 w-5"></i> Volunteers
+            <a href="{{ route('home') }}" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                <i class="fas fa-home mr-3 text-primary w-5"></i> Homepage
             </a>
             
             <hr class="my-2 border-gray-200">
@@ -167,6 +213,21 @@
         });
     }
 
+    // Mobile donations submenu toggle
+    const mobileDonationsBtn = document.getElementById('mobileDonationsBtn');
+    const mobileDonationsSubmenu = document.getElementById('mobileDonationsSubmenu');
+    const mobileDonationsIcon = document.getElementById('mobileDonationsIcon');
+    let isDonationsOpen = false;
+
+    if (mobileDonationsBtn) {
+        mobileDonationsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isDonationsOpen = !isDonationsOpen;
+            mobileDonationsSubmenu.classList.toggle('hidden', !isDonationsOpen);
+            mobileDonationsIcon.classList.toggle('rotate-180', isDonationsOpen);
+        });
+    }
     // Mobile events submenu toggle - FIXED: Keeps menu open
     const mobileEventsBtn = document.getElementById('mobileEventsBtn');
     const mobileEventsSubmenu = document.getElementById('mobileEventsSubmenu');

@@ -132,8 +132,6 @@ class ToyyibpayController extends Controller
                 $billCode = $result[0]['BillCode'];
                 $paymentUrl = $baseUrl . '/' . $billCode;
                 
-                // Update donation with transaction data (store as JSON with bill_code)
-                $this->mergeTransactionData($donation, 'bill_code', $billCode);
 
                 Log::info('ToyyibPay: Bill created successfully', [
                     'bill_code' => $billCode,
@@ -146,7 +144,7 @@ class ToyyibpayController extends Controller
                     return response()->json([
                         'success' => true,
                         'payment_url' => $paymentUrl,
-                        'transaction_id' => $billCode,
+                        'bill_code' => $billCode,
                         'donation_id' => $donationId,
                     ]);
                 }
@@ -207,54 +205,86 @@ class ToyyibpayController extends Controller
 
     public function handleCallback(Request $request)
     {
-        $statusId = $request->input('status_id');
+        $statusId = (string) $request->input('status_id');
         $donationId = $request->input('order_id');
         $transactionId = $request->input('transaction_id');
 
-        Log::info('ToyyibPay: Callback received', [
+        Log::info('ToyyibPay: Payment response received', [
+            'method' => $request->method(),
             'status_id' => $statusId,
             'donation_id' => $donationId,
-            'transaction_id' => $transactionId
+            'transaction_id' => $transactionId,
         ]);
 
-        $donation = Donation::where('donation_id', $donationId)->first();
+        $donation = $donationId
+            ? Donation::where('donation_id', $donationId)->first()
+            : null;
 
         if ($donation) {
-            // Check success and ensure not already processed
-            if ($statusId == 1 && $donation->donation_status !== 'success') {
-                // Update donation with transaction ID from callback
+            if ($statusId === '1') {
+                $wasAlreadySuccessful = $donation->donation_status === 'success';
                 $donation->donation_status = 'success';
                 $donation->donation_received_by = 'ToyyibPay';
-                // Merge callback transaction_id into transaction data
+
+                // Store only ToyyibPay's final gateway transaction ID.
                 if ($transactionId) {
-                    $this->mergeTransactionData($donation, 'transaction_id', $transactionId);
+                    $donation->donation_transaction_id = $transactionId;
                 }
                 $donation->save();
 
+                if (!$wasAlreadySuccessful) {
+                    $this->recalculateAllocationsForDonation($donation);
+                }
+
                 Log::info('ToyyibPay: Donation successful', [
                     'donation_id' => $donationId,
-                    'transaction_id' => $transactionId
+                    'transaction_id' => $transactionId,
+                    'already_processed' => $wasAlreadySuccessful,
                 ]);
+            } elseif ($statusId === '2' && $donation->donation_status !== 'success') {
+                $donation->donation_status = 'pending';
+                $donation->save();
+            } elseif ($statusId === '3' && $donation->donation_status !== 'success') {
+                $donation->donation_status = 'failed';
+                $donation->save();
+            }
+        }
 
-                        // Recalculate allocations
-                        $this->recalculateAllocationsForDonation($donation);
+        // ToyyibPay's server callback only needs an acknowledgement.
+        if ($request->isMethod('post')) {
+            return response('OK', 200);
+        }
 
-                    } elseif ($statusId == 2) {
-                        $donation->donation_status = 'pending';
-                        $donation->save();
-                    } elseif ($statusId == 3) {
-                        $donation->donation_status = 'failed';
-                        $donation->save();
-                    }
-                }
-        $statusText = $statusId == 1 ? 'Donation successful! Thank you.' : 
-                      ($statusId == 2 ? 'Payment pending.' : 'Payment failed.');
+        // The GET return is the customer's browser and should show a result page.
+        if ($statusId === '1' && $donation) {
+            return redirect()->route('toyyibpay.donation.success')->with([
+                'success' => 'Thank you for your donation!',
+                'donation_id' => $donation->donation_id,
+                'amount' => $donation->donation_amount,
+                'transaction_id' => $transactionId ?: $donation->donation_transaction_id,
+                'payment_gateway' => 'ToyyibPay',
+            ]);
+        }
 
-        return view('paymentGateway.toyyibpayPaymentStatus', [
-            'status' => $statusId == 1 ? 'success' : 'failed',
-            'message' => $statusText,
-            'transaction_id' => $transactionId,
-        ]);
+        $message = $statusId === '2'
+            ? 'Your payment is still pending or was cancelled.'
+            : 'Payment was unsuccessful. Please try again.';
+
+        if (!$donationId || !$donation) {
+            $message = 'We could not verify the ToyyibPay payment response.';
+        }
+
+        return redirect()->route('toyyibpay.donation.failed')->with('error', $message);
+    }
+
+    public function showSuccess()
+    {
+        return view('user.donation.stripe-success');
+    }
+
+    public function showFailed()
+    {
+        return view('user.donation.stripe-failed');
     }
 
     /**
@@ -268,35 +298,5 @@ class ToyyibpayController extends Controller
         return 'DON-' . str_pad($next, 4, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Merge transaction data into `donation_transaction_id` as JSON.
-     * Preserves existing non-JSON values by moving them under `existing` key.
-     */
-    private function mergeTransactionData(Donation $donation, string $key, $value)
-    {
-        $existing = $donation->donation_transaction_id;
-        $data = [];
-
-        if ($existing) {
-            // try decode
-            $decoded = null;
-            try {
-                $decoded = json_decode($existing, true);
-            } catch (\Throwable $e) {
-                $decoded = null;
-            }
-
-            if (is_array($decoded)) {
-                $data = $decoded;
-            } else {
-                // preserve previous string under 'existing'
-                $data['existing'] = $existing;
-            }
-        }
-
-        $data[$key] = $value;
-        $donation->donation_transaction_id = json_encode($data);
-        $donation->save();
-    }
 
 }

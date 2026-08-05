@@ -169,30 +169,42 @@
                             @if($event->isUpcoming() && $event->event_approval_status == 'Approved' && $event->event_publish)
                                 @php
                                     $isFull = $event->is_full;
-                                    $isCreator = ($event->event_created_by_id == auth()->user()->user_id);
-                                    $isRegistered = $event->isUserRegistered(auth()->user()->user_id);
                                 @endphp
-                                
-                                @if(!$isCreator)
-                                    @if($isRegistered)
-                                        <!-- Show registered message instead of cancel button -->
-                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                            <span class="text-green-700 text-sm font-medium">You are registered for this event!</span>
-                                            <p class="text-xs text-green-600 mt-1">Contact organizer for any changes to your registration.</p>
-                                        </div>
-                                    @elseif(!$isFull)
-                                        <button onclick="registerForEvent()" 
-                                                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-                                            <i class="fas fa-hand-peace"></i> Register as Participant
-                                        </button>
+
+                                @auth
+                                    @php
+                                        $isCreator = ($event->event_created_by_id == auth()->user()->user_id);
+                                        $isRegistered = $event->isUserRegistered(auth()->user()->user_id);
+                                    @endphp
+
+                                    @if(!$isCreator)
+                                        @if($isRegistered)
+                                            <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                                <span class="text-green-700 text-sm font-medium">You are registered for this event!</span>
+                                                <p class="text-xs text-green-600 mt-1">Contact organizer for any changes to your registration.</p>
+                                            </div>
+                                        @elseif(!$isFull)
+                                            <button onclick="registerForEvent()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                                                <i class="fas fa-hand-peace"></i> Register as Participant
+                                            </button>
+                                        @else
+                                            <button disabled class="w-full bg-gray-400 text-white font-semibold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                                                <i class="fas fa-ban"></i> Event Full
+                                            </button>
+                                        @endif
+                                    @endif
+                                @else
+                                    @if(!$isFull)
+                                        <a href="{{ route('login') }}" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                                            <i class="fas fa-sign-in-alt"></i> Login to Register
+                                        </a>
                                     @else
-                                        <button disabled 
-                                                class="w-full bg-gray-400 text-white font-semibold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                                        <button disabled class="w-full bg-gray-400 text-white font-semibold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
                                             <i class="fas fa-ban"></i> Event Full
                                         </button>
                                     @endif
-                                @endif
+                                @endauth
                             @endif
                             
                             <!-- Back Button -->

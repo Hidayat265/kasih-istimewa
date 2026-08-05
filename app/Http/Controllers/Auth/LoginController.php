@@ -83,7 +83,8 @@ class LoginController extends Controller
          */
 
         // Login user manually
-        Auth::login($user, $request->boolean('remember'));
+        // Use a session-only login; persistent remember sessions are disabled.
+        Auth::login($user);
 
         // Regenerate session
         $request->session()->regenerate();

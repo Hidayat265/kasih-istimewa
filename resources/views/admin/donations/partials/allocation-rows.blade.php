@@ -1,7 +1,8 @@
 @forelse($allocations as $index => $allocation)
     @php
-        $allocationDate = \Carbon\Carbon::parse($allocation->allocation_month . '-01');
-        $currentDate = now();
+        // Compare calendar months so the previous month stays editable all month.
+        $allocationDate = \Carbon\Carbon::parse($allocation->allocation_month . '-01')->startOfMonth();
+        $currentDate = now()->startOfMonth();
         $monthsDifference = $currentDate->diffInMonths($allocationDate, false);
         $canEdit = $monthsDifference >= -1;
     @endphp

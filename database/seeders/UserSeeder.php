@@ -54,7 +54,7 @@ class UserSeeder extends Seeder
             // ========== EXISTING USERS (KEEP ALL) ==========
             [
                 "user_name" => "User1",
-                "user_email" => "User1@gmail.com",
+                "user_email" => "User1@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0123456789",
                 "user_dob" => "2003-05-26",
@@ -64,7 +64,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "User2",
-                "user_email" => "user2@gmail.com",
+                "user_email" => "user2@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0122222222",
                 "user_dob" => "2006-07-07",
@@ -74,7 +74,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Muhammad Hidayat",
-                "user_email" => "hidayat@gmail.com",
+                "user_email" => "hidayat@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0138834062",
                 "user_dob" => "2003-05-27",
@@ -94,7 +94,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Admin1",
-                "user_email" => "admin1@gmail.com",
+                "user_email" => "admin1@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0136523141",
                 "user_dob" => "2003-07-10",
@@ -104,7 +104,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Taro",
-                "user_email" => "taro@gmail.com",
+                "user_email" => "taro@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0321654987",
                 "user_dob" => "2006-06-15",
@@ -114,7 +114,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Adam Muqrish",
-                "user_email" => "adam@gmail.com",
+                "user_email" => "adam@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0111111111",
                 "user_dob" => "2000-01-01",
@@ -124,7 +124,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Alif Aminudin",
-                "user_email" => "alif@gmail.com",
+                "user_email" => "alif@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0122222222",
                 "user_dob" => "2001-02-02",
@@ -134,7 +134,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Ipan Arsyad",
-                "user_email" => "ipan@gmail.com",
+                "user_email" => "ipan@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0133333333",
                 "user_dob" => "2002-03-03",
@@ -144,7 +144,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Muhammad Icam",
-                "user_email" => "icam@gmail.com",
+                "user_email" => "icam@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0144444444",
                 "user_dob" => "2003-04-04",
@@ -154,7 +154,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Muhammad Ilyas",
-                "user_email" => "ilyas@gmail.com",
+                "user_email" => "ilyas@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0155555555",
                 "user_dob" => "1975-05-05",
@@ -164,7 +164,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Sarip",
-                "user_email" => "sarip@gmail.com",
+                "user_email" => "sarip@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0166666666",
                 "user_dob" => "2005-06-06",
@@ -174,7 +174,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Dum",
-                "user_email" => "dum@gmail.com",
+                "user_email" => "dum@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0177777777",
                 "user_dob" => "2006-07-07",
@@ -184,7 +184,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Hidayat Jr",
-                "user_email" => "hidayatjr@gmail.com",
+                "user_email" => "hidayatjr@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0188888888",
                 "user_dob" => "2007-08-08",
@@ -217,7 +217,7 @@ class UserSeeder extends Seeder
             // More University Students
             [
                 "user_name" => "Muhammad Daniel Bin Abdullah",
-                "user_email" => "daniel@gmail.com",
+                "user_email" => "daniel@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0191234567",
                 "user_dob" => "2001-03-15",
@@ -227,7 +227,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Nurul Afiqah Binti Zainal",
-                "user_email" => "afiqah@gmail.com",
+                "user_email" => "afiqah@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0112345678",
                 "user_dob" => "2002-06-22",
@@ -237,7 +237,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Amirul Hakim Bin Mohamad",
-                "user_email" => "amirul@gmail.com",
+                "user_email" => "amirul@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0129876543",
                 "user_dob" => "2000-11-30",
@@ -249,7 +249,7 @@ class UserSeeder extends Seeder
             // Working Professionals
             [
                 "user_name" => "Sharifah Nurul Aida",
-                "user_email" => "sharifah@gmail.com",
+                "user_email" => "sharifah@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0187654321",
                 "user_dob" => "1990-08-10",
@@ -259,7 +259,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Mohamad Rafiq Bin Jamaludin",
-                "user_email" => "rafiq@gmail.com",
+                "user_email" => "rafiq@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0176543210",
                 "user_dob" => "1995-12-05",
@@ -269,7 +269,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Farah Nabilah Binti Azman",
-                "user_email" => "farah@gmail.com",
+                "user_email" => "farah@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0165432109",
                 "user_dob" => "1993-04-18",
@@ -281,7 +281,7 @@ class UserSeeder extends Seeder
             // Seniors/Experienced Volunteers
             [
                 "user_name" => "Abu Bakar Bin Hassan",
-                "user_email" => "abubakar@gmail.com",
+                "user_email" => "abubakar@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0198765432",
                 "user_dob" => "1965-02-28",
@@ -291,7 +291,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Rohaya Binti Ismail",
-                "user_email" => "rohaya@gmail.com",
+                "user_email" => "rohaya@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0123456780",
                 "user_dob" => "1970-07-15",
@@ -303,7 +303,7 @@ class UserSeeder extends Seeder
             // International / Expat Volunteer
             [
                 "user_name" => "John Smith",
-                "user_email" => "johnsmith@gmail.com",
+                "user_email" => "johnsmith@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0101234567",
                 "user_dob" => "1988-09-20",
@@ -315,7 +315,7 @@ class UserSeeder extends Seeder
             // ========== ADDITIONAL ADMIN USERS (without ADMIN prefix) ==========
             [
                 "user_name" => "Suhaili",
-                "user_email" => "suhaili@admin.com",
+                "user_email" => "suhaili@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0198881111",
                 "user_dob" => "1985-11-15",
@@ -325,7 +325,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Zulkifli",
-                "user_email" => "zulkifli@admin.com",
+                "user_email" => "zulkifli@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0123451111",
                 "user_dob" => "1990-03-20",
@@ -335,7 +335,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Mastura",
-                "user_email" => "mastura@admin.com",
+                "user_email" => "mastura@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0176665555",
                 "user_dob" => "1988-07-25",
@@ -345,7 +345,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Syafiq",
-                "user_email" => "syafiq@admin.com",
+                "user_email" => "syafiq@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0139994444",
                 "user_dob" => "1992-09-12",
@@ -355,7 +355,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Rosli",
-                "user_email" => "rosli@admin.com",
+                "user_email" => "rosli@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0147773333",
                 "user_dob" => "1979-05-08",
@@ -367,7 +367,7 @@ class UserSeeder extends Seeder
             // ========== MORE REGULAR USERS ==========
             [
                 "user_name" => "Siti Nurhaliza Binti Abdullah",
-                "user_email" => "siti.nurhaliza@gmail.com",
+                "user_email" => "siti.nurhaliza@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01111223344",
                 "user_dob" => "1998-02-14",
@@ -377,7 +377,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Vinod A/L Kumar",
-                "user_email" => "vinod.kumar@gmail.com",
+                "user_email" => "vinod.kumar@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01677889900",
                 "user_dob" => "1995-06-30",
@@ -387,7 +387,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Tan Bee Choo",
-                "user_email" => "tan.beechoo@gmail.com",
+                "user_email" => "tan.beechoo@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01255667788",
                 "user_dob" => "1992-10-05",
@@ -397,7 +397,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Mohamed Shah Bin Othman",
-                "user_email" => "mohamed.shah@gmail.com",
+                "user_email" => "mohamed.shah@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01345677889",
                 "user_dob" => "1987-12-19",
@@ -407,7 +407,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Lydia Nicole David",
-                "user_email" => "lydia.nicole@gmail.com",
+                "user_email" => "lydia.nicole@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01499887766",
                 "user_dob" => "1999-04-23",
@@ -417,7 +417,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Prema A/P Sivanesan",
-                "user_email" => "prema.siva@gmail.com",
+                "user_email" => "prema.siva@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01755443322",
                 "user_dob" => "1996-08-17",
@@ -427,7 +427,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Wong Chun Keat",
-                "user_email" => "wong.keat@gmail.com",
+                "user_email" => "wong.keat@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01098766554",
                 "user_dob" => "1994-01-09",
@@ -437,7 +437,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Nor Asyikin Binti Mohamad",
-                "user_email" => "asyikin.mohamad@gmail.com",
+                "user_email" => "asyikin.mohamad@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01923344556",
                 "user_dob" => "1997-11-28",
@@ -447,7 +447,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Gerald Anak Joseph",
-                "user_email" => "gerald.joseph@gmail.com",
+                "user_email" => "gerald.joseph@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01890099887",
                 "user_dob" => "1993-03-11",
@@ -457,7 +457,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "user_name" => "Chong Hui Min",
-                "user_email" => "chong.huimin@gmail.com",
+                "user_email" => "chong.huimin@kasihistimewa.my",
                 "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "01678899556",
                 "user_dob" => "2000-07-06",

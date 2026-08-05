@@ -22,6 +22,14 @@ class DonationAllocationController extends Controller
             $selectedMonth = now()->format('Y-m');
         }
 
+        // Allocation amounts are derived from successful donations. Keep the
+        // cached amounts in sync before displaying dashboard totals.
+        DonationAllocation::recalculateMonth($selectedMonth);
+
+        if (!$request->filled('month')) {
+            DonationAllocation::recalculateAll();
+        }
+
         $allocations = DonationAllocation::with([
                 'category',
                 'changedByUser'
@@ -68,6 +76,12 @@ class DonationAllocationController extends Controller
 
     public function getAllocationsData(Request $request)
     {
+        if ($request->filled('month')) {
+            DonationAllocation::recalculateMonth($request->month);
+        } else {
+            DonationAllocation::recalculateAll();
+        }
+
         $query = DonationAllocation::with([
             'category',
             'changedByUser'
@@ -480,6 +494,8 @@ class DonationAllocationController extends Controller
      */
     public function getSummary($month)
     {
+        DonationAllocation::recalculateMonth($month);
+
         return response()->json([
             'success' => true,
             'data' => DonationAllocation::getMonthSummary($month)

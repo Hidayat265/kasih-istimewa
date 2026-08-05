@@ -21,14 +21,17 @@
                     <p class="text-sm text-gray-600">Donation Reference</p>
                     <p class="text-lg font-semibold text-primary">{{ session('donation_id') }}</p>
                     <p class="text-sm text-gray-600 mt-2">Amount: <strong>RM {{ number_format(session('amount'), 2) }}</strong></p>
+                    @if(session('transaction_id'))
+                        <p class="text-sm text-gray-600 mt-2">Transaction ID</p>
+                        <p class="text-sm font-mono font-semibold text-gray-800 break-all">{{ session('transaction_id') }}</p>
+                    @endif
                 </div>
             @endif
             
-            <!-- Stripe sends the receipt automatically -->
             <div class="bg-blue-50 border-l-4 border-blue-400 p-4 text-left mb-6">
                 <p class="text-sm text-blue-700">
-                    <i class="fas fa-envelope mr-2"></i>
-                    A receipt has been sent to your email by Stripe.
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Your payment was processed securely through {{ session('payment_gateway', 'Stripe') }}.
                 </p>
             </div>
 

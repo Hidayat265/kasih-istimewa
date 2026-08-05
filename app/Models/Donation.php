@@ -57,6 +57,28 @@ class Donation extends Model
         return $this->receivedByUser?->user_name ?? $this->donation_received_by;
     }
 
+    /**
+     * Return one gateway-native transaction ID, including for legacy JSON rows.
+     */
+    public function getGatewayTransactionIdAttribute(): ?string
+    {
+        $storedValue = $this->donation_transaction_id;
+
+        if (!$storedValue) {
+            return null;
+        }
+
+        $legacyData = json_decode($storedValue, true);
+
+        if (is_array($legacyData)) {
+            return $legacyData['transaction_id']
+                ?? $legacyData['payment_intent']
+                ?? null;
+        }
+
+        return $storedValue;
+    }
+
     // Scopes
     public function scopeCompleted($query)
     {

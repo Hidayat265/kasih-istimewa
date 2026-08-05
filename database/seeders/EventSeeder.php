@@ -12,18 +12,18 @@ class EventSeeder extends Seeder
     public function run(): void
     {
         // Get users by email to get their user_ids
-        $taroUser = User::where('user_email', 'taro@gmail.com')->first();
+        $taroUser = User::where('user_email', 'taro@kasihistimewa.my')->first();
         $dieyardUser = User::where('user_email', 'dieyard.dhr@gmail.com')->first();
         $adminUser = User::where('is_admin', 1)->first();
         $aneUser = User::where('user_email', 'qaiyumakashah0929@gmail.com')->first();
         
         // Get other users for variety
-        $adamUser = User::where('user_email', 'adam@gmail.com')->first();
-        $alifUser = User::where('user_email', 'alif@gmail.com')->first();
-        $hidayatUser = User::where('user_email', 'hidayat@gmail.com')->first();
-        $danielUser = User::where('user_email', 'daniel@gmail.com')->first();
-        $afiqahUser = User::where('user_email', 'afiqah@gmail.com')->first();
-        $sharifahUser = User::where('user_email', 'sharifah@gmail.com')->first();
+        $adamUser = User::where('user_email', 'adam@kasihistimewa.my')->first();
+        $alifUser = User::where('user_email', 'alif@kasihistimewa.my')->first();
+        $hidayatUser = User::where('user_email', 'hidayat@kasihistimewa.my')->first();
+        $danielUser = User::where('user_email', 'daniel@kasihistimewa.my')->first();
+        $afiqahUser = User::where('user_email', 'afiqah@kasihistimewa.my')->first();
+        $sharifahUser = User::where('user_email', 'sharifah@kasihistimewa.my')->first();
         
         // If no users exist, create some
         if (!$dieyardUser) {

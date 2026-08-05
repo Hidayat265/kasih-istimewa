@@ -95,6 +95,8 @@
     let currentFilter = 'all';
     let currentSearch = '';
     let currentSort = 'date_asc';
+    const isAuthenticated = @json(auth()->check());
+    const loginUrl = @json(route('login'));
 
     document.addEventListener('DOMContentLoaded', function() {
         fetchEvents();
@@ -343,13 +345,18 @@
                            class="flex-1 text-center px-2 md:px-3 py-1.5 md:py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition text-xs md:text-sm">
                             <i class="fas fa-info-circle mr-1 md:mr-2"></i>View Details
                         </a>
-                        ${!isFull ? `
-                            <button onclick="registerForEvent('${event.id}')" 
+                        ${!isFull ? (isAuthenticated ? `
+                            <button onclick="registerForEvent('${event.id}')"
                                     class="flex-1 px-2 md:px-3 py-1.5 md:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition text-xs md:text-sm">
                                 <i class="fas fa-hand-peace mr-1 md:mr-2"></i>Register
                             </button>
                         ` : `
-                            <button disabled 
+                            <a href="${loginUrl}"
+                               class="flex-1 text-center px-2 md:px-3 py-1.5 md:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition text-xs md:text-sm">
+                                <i class="fas fa-sign-in-alt mr-1 md:mr-2"></i>Login to Register
+                            </a>
+                        `) : `
+                            <button disabled
                                     class="flex-1 px-2 md:px-3 py-1.5 md:py-2 bg-gray-300 text-gray-500 rounded-lg text-xs md:text-sm cursor-not-allowed">
                                 <i class="fas fa-ban mr-1 md:mr-2"></i>Full
                             </button>

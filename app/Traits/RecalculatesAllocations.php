@@ -18,11 +18,6 @@ trait RecalculatesAllocations
 
         $month = $donation->created_at->format('Y-m');
         
-        // Check if there are allocations for this month
-        $hasAllocations = DonationAllocation::where('allocation_month', $month)->exists();
-        
-        if ($hasAllocations) {
-            DonationAllocation::recalculateMonth($month);
-        }
+        DonationAllocation::recalculateMonth($month);
     }
 }
