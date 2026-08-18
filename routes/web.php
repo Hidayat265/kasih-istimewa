@@ -21,9 +21,30 @@ use App\Models\Participant;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::get('/sitemap.xml', function () {
+
+    $events = Event::where('event_approval_status', 'Approved')
+        ->where('event_publish', 1)
+        ->where(function ($query) {
+            $query->whereDate('event_end_date', '>', now()->toDateString())
+                ->orWhere(function ($query) {
+                    $query->whereDate('event_end_date', now()->toDateString())
+                        ->whereRaw("
+                            CASE event_end_session
+                                WHEN 'Morning' THEN '12:00:00'
+                                WHEN 'Afternoon' THEN '17:00:00'
+                                WHEN 'Evening' THEN '22:00:00'
+                                ELSE '00:00:00'
+                            END >= ?
+                        ", [now()->format('H:i:s')]);
+                });
+        })
+        ->orderBy('event_start_date', 'asc')
+        ->get();
+
     return response()
-        ->view('sitemap')
+        ->view('sitemap', compact('events'))
         ->header('Content-Type', 'application/xml');
+
 })->name('sitemap');
 
 // ========== HOMEPAGE WITH DYNAMIC STATS ==========

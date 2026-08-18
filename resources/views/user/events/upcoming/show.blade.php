@@ -2,6 +2,121 @@
 
 @section('title', $event->event_name . ' | Kasih Istimewa')
 
+@section(
+    'description',
+    \Illuminate\Support\Str::limit(
+        strip_tags(
+            $event->event_description
+            ?? 'Join this event with Kasih Istimewa and support our special needs community.'
+        ),
+        155
+    )
+)
+
+@section(
+    'canonical',
+    route('events.public.show', $event->event_id)
+)
+
+@section(
+    'og_image',
+    $event->event_picture
+        ? (
+            str_starts_with($event->event_picture, 'http')
+                ? $event->event_picture
+                : asset('storage/' . $event->event_picture)
+        )
+        : asset('images/kasih-istimewa-og.jpg')
+)
+
+@section(
+    'og_image_alt',
+    $event->event_name
+)
+
+@php
+    $startTimes = [
+        'Morning' => '08:00:00',
+        'Afternoon' => '13:00:00',
+        'Evening' => '18:00:00',
+    ];
+
+    $endTimes = [
+        'Morning' => '12:00:00',
+        'Afternoon' => '17:00:00',
+        'Evening' => '22:00:00',
+    ];
+
+    $startDate = $event->event_start_date->format('Y-m-d');
+    $endDate = $event->event_end_date->format('Y-m-d');
+
+    $startDateTime = \Carbon\Carbon::parse(
+        $startDate . ' ' .
+        ($startTimes[$event->event_start_session] ?? '08:00:00'),
+        'Asia/Kuching'
+    )->toIso8601String();
+
+    $endDateTime = \Carbon\Carbon::parse(
+        $endDate . ' ' .
+        ($endTimes[$event->event_end_session] ?? '22:00:00'),
+        'Asia/Kuching'
+    )->toIso8601String();
+
+    $eventImage = $event->event_picture
+        ? (
+            str_starts_with($event->event_picture, 'http')
+                ? $event->event_picture
+                : asset('storage/' . $event->event_picture)
+        )
+        : asset('images/kasih-istimewa-og.jpg');
+@endphp
+
+@push('structured-data')
+<script type="application/ld+json">
+{!! json_encode([
+    ('@' . 'context') => 'https://schema.org',
+    '@type' => 'Event',
+
+    'name' => $event->event_name,
+
+    'description' => strip_tags(
+        $event->event_description
+        ?? 'Join this event with Kasih Istimewa.'
+    ),
+
+    'startDate' => $startDateTime,
+    'endDate' => $endDateTime,
+
+    'eventStatus' => 'https://schema.org/EventScheduled',
+
+    'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+
+    'location' => [
+        '@type' => 'Place',
+        'name' => $event->event_location_name ?? 'Event Venue',
+
+        'address' => [
+            '@type' => 'PostalAddress',
+            'streetAddress' => $event->event_location_address ?? '',
+        ],
+    ],
+
+    'image' => [
+        $eventImage,
+    ],
+
+    'organizer' => [
+        '@type' => 'Organization',
+        'name' => $event->event_company_name ?? 'Kasih Istimewa',
+        'url' => url('/'),
+    ],
+
+    'url' => route('events.public.show', $event->event_id),
+
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endpush
+
 @section('content')
 <!-- Hero Section with Event Banner -->
 <section class="relative h-64 md:h-96 bg-cover bg-center" 

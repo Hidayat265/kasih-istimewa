@@ -4,8 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <link rel="icon" href="{{ asset('KasihIstimewa-KI-icon.ico') }}">
-    <title>@yield('title', 'Kasih Istimewa')</title>
+
+    <title>@yield('title', 'Kasih Istimewa | Making a Difference in Special Needs Lives')</title>
+
+    <meta name="description"
+        content="@yield('description', 'Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.')">
+
+    <meta name="robots" content="index, follow">
+
+    <meta name="author" content="Kasih Istimewa">
+
+    <link rel="canonical"
+        href="@yield('canonical', url()->current())">
+
+    <!-- Open Graph -->
+    <meta property="og:type"
+        content="website">
+
+    <meta property="og:site_name"
+        content="Kasih Istimewa">
+
+    <meta property="og:title"
+        content="@yield('title', 'Kasih Istimewa | Making a Difference in Special Needs Lives')">
+
+    <meta property="og:description"
+        content="@yield('description', 'Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.')">
+
+    <meta property="og:url"
+        content="@yield('canonical', url()->current())">
+
+    <meta property="og:image"
+        content="@yield('og_image', asset('images/kasih-istimewa-og.jpg'))">
+
+    <meta property="og:image:alt"
+        content="@yield('og_image_alt', 'Kasih Istimewa')">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card"
+        content="summary_large_image">
+
+    <meta name="twitter:title"
+        content="@yield('title', 'Kasih Istimewa | Making a Difference in Special Needs Lives')">
+
+    <meta name="twitter:description"
+        content="@yield('description', 'Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.')">
+
+    <meta name="twitter:image"
+        content="@yield('og_image', asset('images/kasih-istimewa-og.jpg'))">
+
+    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -90,6 +139,7 @@
         }
     </script>
     @stack('styles')
+    @stack('structured-data')
 </head>
 <body class="antialiased bg-gray-50">
 
