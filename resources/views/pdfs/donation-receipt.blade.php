@@ -373,7 +373,7 @@
                 <span>•</span>
                 <span> support@kasihistimewa.my</span>
                 <span>•</span>
-                <span> www.kasihistimewa.com</span>
+                <span> www.kasihistimewa.my</span>
                 <span>•</span>
             </p>
         </div>

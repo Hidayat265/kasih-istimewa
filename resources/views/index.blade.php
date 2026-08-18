@@ -1,114 +1,302 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{{ asset('KasihIstimewa-KI-icon.ico') }}">
-    <title>Kasih Istimewa - Making a Difference in Special Needs Lives</title>
-    <!-- Load Tailwind CSS -->
+
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- =========================================================
+         SEO
+    ========================================================== -->
+
+    <!-- Page Title -->
+    <title>Kasih Istimewa | Making a Difference in Special Needs Lives</title>
+
+    <!-- Meta Description -->
+    <meta name="description"
+          content="Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.">
+
+    <!-- Search Engine -->
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Kasih Istimewa">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ url('/') }}">
+
+    <!-- =========================================================
+         FAVICON
+    ========================================================== -->
+
+    <link rel="icon"
+          type="image/x-icon"
+          href="{{ asset('KasihIstimewa-KI-icon.ico') }}">
+
+    <!-- =========================================================
+         OPEN GRAPH
+         Facebook / WhatsApp / LinkedIn etc.
+    ========================================================== -->
+
+    <meta property="og:type" content="website">
+
+    <meta property="og:site_name"
+          content="Kasih Istimewa">
+
+    <meta property="og:title"
+          content="Kasih Istimewa | Making a Difference in Special Needs Lives">
+
+    <meta property="og:description"
+          content="Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.">
+
+    <meta property="og:url"
+          content="{{ url('/') }}">
+
+    <meta property="og:image"
+          content="{{ asset('images/kasih-istimewa-og.jpg') }}">
+
+    <meta property="og:image:alt"
+          content="Kasih Istimewa">
+
+    <!-- =========================================================
+         TWITTER / X CARD
+    ========================================================== -->
+
+    <meta name="twitter:card"
+          content="summary_large_image">
+
+    <meta name="twitter:title"
+          content="Kasih Istimewa | Making a Difference in Special Needs Lives">
+
+    <meta name="twitter:description"
+          content="Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs.">
+
+    <meta name="twitter:image"
+          content="{{ asset('images/kasih-istimewa-og.jpg') }}">
+
+    <!-- =========================================================
+         STRUCTURED DATA / GOOGLE SCHEMA
+    ========================================================== -->
+
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Kasih Istimewa",
+        "url": "{{ url('/') }}",
+        "logo": "{{ asset('KasihIstimewa-KI-icon.ico') }}",
+        "description": "Kasih Istimewa supports individuals with special needs through donations, volunteering, community events and meaningful support programs."
+    }
+    </script>
+
+    <!-- =========================================================
+         TAILWIND CSS
+    ========================================================== -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Swiper CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-    <!-- AOS Animation CSS -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- =========================================================
+         SWIPER CSS
+    ========================================================== -->
+
     <link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+          href="https://unpkg.com/swiper/swiper-bundle.min.css">
+
+    <!-- =========================================================
+         AOS ANIMATION CSS
+    ========================================================== -->
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+
+    <!-- =========================================================
+         FONT AWESOME
+    ========================================================== -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- =========================================================
+         CUSTOM CSS
+    ========================================================== -->
+
     <style>
-        /* Custom Font and base styles */
+        /* Base Styles */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
             color: #1f2937;
         }
-        /* Custom utilities */
+
+        /* Soft Shadow */
         .shadow-soft {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow:
+                0 10px 15px -3px rgba(0, 0, 0, 0.05),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Gradient Text */
         .text-gradient {
-            background-image: linear-gradient(to right, #554994, #CB80AB);
+            background-image: linear-gradient(
+                to right,
+                #554994,
+                #CB80AB
+            );
+
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        /* Swiper custom styles */
-        .swiper-button-next, .swiper-button-prev {
+
+        /* =====================================================
+           SWIPER
+        ====================================================== */
+
+        .swiper-button-next,
+        .swiper-button-prev {
             color: #554994;
         }
-        .swiper-button-next:after, .swiper-button-prev:after {
+
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
             font-size: 2rem !important;
             font-weight: bold;
         }
 
-        /* Remove spinner arrows ONLY for this input */
+        /* =====================================================
+           DONATION PHONE INPUT
+        ====================================================== */
+
         input#donor_phone::-webkit-inner-spin-button,
         input#donor_phone::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+
         input#donor_phone {
             -moz-appearance: textfield;
         }
 
-        /* Floating animation for hero image */
+        /* =====================================================
+           HERO FLOATING ANIMATION
+        ====================================================== */
+
         .float-animation {
             animation: float 6s ease-in-out infinite;
         }
+
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
         }
 
-        /* Pulse animation for stat numbers */
+        /* =====================================================
+           STAT NUMBERS
+        ====================================================== */
+
         .stat-number {
             transition: all 0.3s ease;
         }
+
         .stat-number:hover {
             transform: scale(1.05);
         }
 
-        /* Gradient border animation for feature cards */
+        /* =====================================================
+           FEATURE CARDS
+        ====================================================== */
+
         .feature-card {
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
         }
+
         .feature-card:hover {
             transform: translateY(-8px);
         }
+
         .feature-card::before {
             content: '';
+
             position: absolute;
+
             top: -2px;
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(45deg, #554994, #CB80AB, #554994);
+
+            background: linear-gradient(
+                45deg,
+                #554994,
+                #CB80AB,
+                #554994
+            );
+
             background-size: 400% 400%;
+
             border-radius: 12px;
+
             z-index: -1;
+
             animation: gradientMove 3s ease infinite;
+
             opacity: 0;
+
             transition: opacity 0.3s ease;
         }
+
         .feature-card:hover::before {
             opacity: 1;
         }
+
         @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        /* Smooth scroll behavior */
+        /* =====================================================
+           SMOOTH SCROLL
+        ====================================================== */
+
         html {
             scroll-behavior: smooth;
         }
 
-        /* Hero section gradient overlay */
+        /* =====================================================
+           HERO GRADIENT
+        ====================================================== */
+
         .hero-gradient {
-            background: linear-gradient(135deg, #554994 0%, #34495e 100%);
+            background: linear-gradient(
+                135deg,
+                #554994 0%,
+                #34495e 100%
+            );
         }
     </style>
+
+    <!-- =========================================================
+         TAILWIND CONFIG
+    ========================================================== -->
+
     <script>
         tailwind.config = {
             theme: {
@@ -124,7 +312,9 @@
             }
         }
     </script>
+
 </head>
+
 <body class="antialiased">
 
     <!-- Navigation Bar -->

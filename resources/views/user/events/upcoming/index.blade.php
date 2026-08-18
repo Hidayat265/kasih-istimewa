@@ -284,6 +284,8 @@
         }
         
         const isFull = event.registered_volunteers >= event.max_volunteers;
+        const isRegistered = event.is_registered === true;
+        const isOwned = event.is_owned === true;
         
         const description = event.description ? 
             (event.description.length > 80 ? event.description.substring(0, 80) + '...' : event.description) : '';
@@ -296,6 +298,20 @@
                         <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <span class="px-3 py-1 bg-red-500 text-white rounded-full text-sm font-semibold">
                                 <i class="fas fa-ban mr-1"></i> Full
+                            </span>
+                        </div>
+                    ` : ''}
+                    ${isRegistered ? `
+                        <div class='absolute top-3 right-3'>
+                            <span class='px-3 py-1 bg-green-600 text-white rounded-full text-sm font-semibold shadow'>
+                                <i class='fas fa-check-circle mr-1'></i> Registered
+                            </span>
+                        </div>
+                    ` : ''}
+                    ${isOwned ? `
+                        <div class='absolute top-3 left-3'>
+                            <span class='px-3 py-1 bg-primary text-white rounded-full text-sm font-semibold shadow'>
+                                <i class='fas fa-user-shield mr-1'></i> Your Event
                             </span>
                         </div>
                     ` : ''}
@@ -342,10 +358,20 @@
                     
                     <div class="flex gap-2 mt-3 md:mt-4">
                         <a href="/events/public/${event.id}" 
-                           class="flex-1 text-center px-2 md:px-3 py-1.5 md:py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition text-xs md:text-sm">
+                           class="flex flex-1 items-center justify-center text-center px-2 md:px-3 py-1.5 md:py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition text-xs md:text-sm">
                             <i class="fas fa-info-circle mr-1 md:mr-2"></i>View Details
                         </a>
-                        ${!isFull ? (isAuthenticated ? `
+                        ${isOwned ? `
+                            <button disabled
+                                    class='flex flex-1 items-center justify-center px-2 md:px-3 py-1.5 md:py-2 bg-gray-200 text-gray-600 font-semibold rounded-lg text-xs md:text-sm cursor-not-allowed'>
+                                <i class='fas fa-ban mr-1 md:mr-2'></i>Your Event
+                            </button>
+                        ` : isRegistered ? `
+                            <button disabled
+                                    class='flex-1 px-2 md:px-3 py-1.5 md:py-2 bg-green-100 text-green-700 font-semibold rounded-lg text-xs md:text-sm cursor-not-allowed'>
+                                <i class='fas fa-check-circle mr-1 md:mr-2'></i>Registered
+                            </button>
+                        ` : !isFull ? (isAuthenticated ? `
                             <button onclick="registerForEvent('${event.id}')"
                                     class="flex-1 px-2 md:px-3 py-1.5 md:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition text-xs md:text-sm">
                                 <i class="fas fa-hand-peace mr-1 md:mr-2"></i>Register
@@ -370,6 +396,26 @@
     function registerForEvent(eventId) {
     const event = allEvents.find(e => e.id == eventId);
     if (!event) return;
+
+    if (event.is_owned === true) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Registration Not Allowed',
+            text: 'You cannot register as a participant in your own event.',
+            confirmButtonColor: '#554994'
+        });
+        return;
+    }
+
+    if (event.is_registered === true) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Already Registered',
+            text: 'You are already registered for this event.',
+            confirmButtonColor: '#554994'
+        });
+        return;
+    }
     
     // Show Terms and Conditions modal first
     Swal.fire({
@@ -456,9 +502,13 @@
                 },
                 body: JSON.stringify({ accept_terms: true })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(async response => ({
+                ok: response.ok,
+                status: response.status,
+                data: await response.json()
+            }))
+            .then(({ ok, status, data }) => {
+                if (ok && data.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Registered!',
@@ -470,8 +520,10 @@
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Registration Failed',
-                        text: data.message,
+                        title: status === 409 && data.error_code === 'schedule_conflict'
+                            ? 'Schedule Conflict'
+                            : 'Registration Failed',
+                        text: data.message || 'Unable to register for this event.',
                         confirmButtonColor: '#d33'
                     });
                 }

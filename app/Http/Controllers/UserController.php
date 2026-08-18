@@ -479,7 +479,15 @@ class UserController extends Controller
         $eventsPage = $request->get('events_page', 1);
         $donationsPage = $request->get('donations_page', 1);
         
-        $events = $user->events()->orderBy('created_at', 'desc')->paginate(5, ['*'], 'events_page', $eventsPage);
+        $events = Event::where(function ($query) use ($user) {
+                $query->where('event_created_by_id', $user->user_id)
+                    ->orWhereHas('participants', function ($participantQuery) use ($user) {
+                        $participantQuery->where('user_id', $user->user_id)
+                            ->where('participant_status', 'confirmed');
+                    });
+            })
+            ->orderByDesc('event_start_date')
+            ->paginate(5, ['*'], 'events_page', $eventsPage);
         $eventCount = $user->events()->count();
         
         // Fix: Use participant_status instead of status
@@ -499,7 +507,7 @@ class UserController extends Controller
         // Handle AJAX requests for pagination
         if ($request->ajax()) {
             if ($request->has('events_page')) {
-                return view('admin.users.partials.events-table', compact('events'))->render();
+                return view('admin.users.partials.events-table', compact('events', 'user'))->render();
             }
             if ($request->has('donations_page')) {
                 return view('admin.users.partials.donations-table', compact('donations'))->render();

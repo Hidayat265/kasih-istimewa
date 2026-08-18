@@ -59,3 +59,143 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+How to Use / Setup / Link the System / Prototype / Database / Raw Data
+System Requirements
+
+Before running this project, make sure the following software is installed:
+
+PHP 8.3 or above
+Composer
+Node.js 20 or above
+npm
+MySQL
+Git
+Web server such as Nginx or Apache for production deployment
+
+For local development, Laragon, XAMPP, or a similar local development environment can also be used.
+
+1. Clone the Project
+Clone the project from GitHub:
+git clone https://github.com/Hidayat265/kasih-istimewa.git
+Enter the project directory:
+cd kasih-istimewa
+
+2. Install PHP Dependencies
+Install all Laravel dependencies using Composer:
+composer install
+For a production server:
+composer install --no-dev --optimize-autoloader
+
+3. Install Frontend Dependencies
+Install Node.js dependencies:
+npm install
+For local development:
+npm run dev
+For production:
+npm run build
+
+4. Configure the Environment File
+Create the .env file from the provided example:
+cp .env.example .env
+On Windows PowerShell:
+copy .env.example .env
+Generate the Laravel application key:
+php artisan key:generate
+The .env file contains environment-specific configuration such as:
+
+Application URL
+Database connection
+Email configuration
+Cloudinary configuration
+Stripe configuration
+ToyyibPay configuration
+Queue configuration
+Cache configuration
+
+Example database configuration:
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=kasihistimewa
+DB_USERNAME=root
+DB_PASSWORD=
+
+Do not upload or commit the .env file to GitHub because it may contain passwords and API credentials.
+
+5. Create the MySQL Database
+Open MySQL:
+mysql -u root -p
+Create a database:
+CREATE DATABASE kasihistimewa;
+Exit MySQL:
+EXIT;
+
+Make sure the database name matches the value configured in .env.
+
+Example:
+
+DB_DATABASE=kasihistimewa
+
+6. Run Database Migrations
+Create all required database tables:
+php artisan migrate
+For production:
+php artisan migrate --force
+The project database includes tables such as:
+
+users
+donations
+events
+participants
+email_verifications
+password_resets
+cache
+cache_locks
+donation_allocation_categories
+donation_allocations
+
+7. Seed Raw / Sample Data
+To insert the sample data provided by the project:
+php artisan db:seed
+To recreate the entire database and insert all seed data:
+php artisan migrate:fresh --seed
+Warning: migrate:fresh deletes all existing database tables and data before recreating them.
+
+The project seeders provide sample data for areas such as:
+
+users and administrators
+events
+donations
+participants
+donation allocation categories
+donation allocations
+
+This raw/sample data is useful for demonstration, testing, and prototype evaluation.
+
+8. Run the System Locally
+Start Laravel's development server:
+php artisan serve
+By default, the application will be available at:
+http://127.0.0.1:8000
+If frontend assets are being developed, run this in another terminal:
+npm run dev
+
+9. Storage Link
+If the system uses files stored under Laravel's public storage, create the symbolic link:
+php artisan storage:link
+This connects:
+public/storage
+to:
+
+storage/app/public
+
+10. Clear and Rebuild Laravel Cache
+After changing .env or production configuration, run:
+php artisan optimize:clear
+For production optimization:
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache

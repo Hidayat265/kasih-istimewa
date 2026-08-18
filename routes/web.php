@@ -20,8 +20,16 @@ use App\Models\Donation;
 use App\Models\Participant;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+Route::get('/sitemap.xml', function () {
+    return response()
+        ->view('sitemap')
+        ->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
 // ========== HOMEPAGE WITH DYNAMIC STATS ==========
 Route::get('/', [LandingController::class, 'index'])->name('home');
+
+
 
 // ========== PUBLIC EVENT ROUTES (No Auth Required) ==========
 Route::get('/events/upcoming', [EventController::class, 'index'])->name('user.upcomingevents');

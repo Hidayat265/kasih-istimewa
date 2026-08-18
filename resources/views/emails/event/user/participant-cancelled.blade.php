@@ -212,7 +212,7 @@
 
             <!-- Contact Info -->
             <p style="font-size: 13px; color: #94a3b8; text-align: center; margin-top: 20px;">
-                If you have any questions, please contact our support team at <strong style="color: #554994;">support@kasihistimewa.com</strong>
+                If you have any questions, please contact our support team at <strong style="color: #554994;">support@kasihistimewa.my</strong>
             </p>
         </div>
 

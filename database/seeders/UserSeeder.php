@@ -205,7 +205,7 @@ class UserSeeder extends Seeder
             [
                 "user_name" => "Hidayat Bin Dieyard",
                 "user_email" => "dieyard.dhr@gmail.com",
-                "user_password" => Hash::make('Hidayat265'),
+                "user_password" => Hash::make('11111111'),
                 "user_phone_number" => "0138834062",
                 "user_dob" => "2003-01-28",
                 "is_admin" => 0,

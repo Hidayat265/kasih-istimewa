@@ -301,10 +301,10 @@
                             >
                         </div>
 
-                        <!-- MONTHLY TOTAL -->
+                        <!-- ALLOCATION AMOUNT -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Monthly Total
+                                Allocation Amount
                             </label>
 
                             <div class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-medium">
@@ -581,7 +581,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-3">
                                 Icon <span class="text-red-500">*</span>
                             </label>
-                            <input type="hidden" name="icon" id="edit_category_icon" value="fas fa-hand-heart">
+                            <input type="hidden" name="alc_cat_icon" id="edit_category_icon" value="fas fa-hand-heart">
                             <div class="grid grid-cols-4 md:grid-cols-6 gap-2 mb-4 max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-gray-50">
                                 @php
                                 $icons = [
@@ -631,7 +631,7 @@
                                 Color
                             </label>
                             <div class="flex items-center gap-2 mb-4">
-                                <input type="color" name="color" id="edit_category_color" value="#554994"
+                                <input type="color" name="alc_cat_color" id="edit_category_color" value="#554994"
                                     class="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer">
                                 <span id="editColorValue" class="text-sm text-gray-600">#554994</span>
                             </div>
@@ -676,6 +676,23 @@
         category: '',
         search: ''
     };
+
+    const managedModalIds = [
+        'allocationModal',
+        'categoriesModal',
+        'createCategoryModal',
+        'editCategoryModal'
+    ];
+
+    function syncBodyScrollLock() {
+        const hasOpenModal = managedModalIds.some(id => {
+            const modalElement = document.getElementById(id);
+            return modalElement && !modalElement.classList.contains('hidden');
+        });
+
+        document.body.classList.toggle('overflow-hidden', hasOpenModal);
+        document.body.style.overflow = hasOpenModal ? 'hidden' : '';
+    }
 
     // Category modal pagination variables
     let categoryCurrentPage = 1;
@@ -1030,7 +1047,7 @@
         
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
+        syncBodyScrollLock();
     }
 
     // Close Edit Category Modal
@@ -1039,7 +1056,7 @@
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            document.body.style.overflow = 'auto';
+            syncBodyScrollLock();
             document.getElementById('editCategoryForm').reset();
         }
     }
@@ -1262,27 +1279,56 @@
         // Edit category form submission
         const editCategoryForm = document.getElementById('editCategoryForm');
         if (editCategoryForm) {
-            editCategoryForm.addEventListener('submit', function(e) {
+            editCategoryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
                 const name = document.getElementById('edit_alc_cat_name').value;
                 const icon = document.getElementById('edit_category_icon').value;
 
                 if (!name) {
-                    e.preventDefault();
                     Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please enter a category name.', confirmButtonColor: '#d33' });
                     return false;
                 }
                 if (!icon) {
-                    e.preventDefault();
                     Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please select an icon.', confirmButtonColor: '#d33' });
                     return false;
                 }
 
-                Swal.fire({ 
-                    title: 'Updating...', 
-                    text: 'Please wait while we update the category.', 
-                    allowOutsideClick: false, 
-                    didOpen: () => { Swal.showLoading(); } 
-                });
+                const submitButton = editCategoryForm.querySelector('[type=submit]');
+                submitButton.disabled = true;
+
+                try {
+                    const response = await fetch(editCategoryForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new FormData(editCategoryForm)
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        const validationMessage = data.errors
+                            ? Object.values(data.errors).flat()[0]
+                            : data.message;
+                        throw new Error(validationMessage || 'Failed to update category.');
+                    }
+
+                    closeEditCategoryModal();
+                    await loadCategories(categoryCurrentPage);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(syncBodyScrollLock);
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Update Failed', text: error.message });
+                } finally {
+                    submitButton.disabled = false;
+                    syncBodyScrollLock();
+                }
             });
         }
 
@@ -1309,26 +1355,85 @@
         }, 100);
     });
 
+    let selectedMonthDonationTotal = 0;
+    let editingAllocationCategoryId = null;
+
+    function filterAvailableAllocationCategories(allocations = []) {
+        const categorySelect = document.getElementById('allocation_category');
+        const usedCategoryIds = new Set(
+            allocations.map(allocation => String(allocation.category_id))
+        );
+
+        Array.from(categorySelect.options).forEach(option => {
+            if (!option.value) return;
+
+            const isCurrentEditCategory = editingAllocationCategoryId !== null
+                && option.value === String(editingAllocationCategoryId);
+            const isAlreadyUsed = usedCategoryIds.has(option.value) && !isCurrentEditCategory;
+
+            option.hidden = isAlreadyUsed;
+            option.disabled = isAlreadyUsed;
+        });
+
+        const selectedOption = categorySelect.selectedOptions[0];
+        if (selectedOption && selectedOption.disabled) {
+            categorySelect.value = '';
+        }
+    }
+
+    function updateAllocationAmountPreview() {
+        const percent = parseFloat(document.getElementById('allocation_percent').value) || 0;
+        const allocationAmount = selectedMonthDonationTotal * (percent / 100);
+        document.getElementById('monthlyTotal').textContent = formatNumber(allocationAmount);
+    }
+
     function updateMonthlyTotal() {
         const month = document.getElementById('allocation_month').value;
+        const monthlyTotalElement = document.getElementById('monthlyTotal');
+
         if (!month) {
-            document.getElementById('monthlyTotal').textContent = '0.00';
+            selectedMonthDonationTotal = 0;
+            filterAvailableAllocationCategories();
+            monthlyTotalElement.textContent = '0.00';
             return;
         }
 
-        fetch(`/admin/donations/allocations/summary/${month}`, {
+        monthlyTotalElement.textContent = 'Loading...';
+
+        fetch(`/admin/donations/allocations/summary/${encodeURIComponent(month)}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.summary) {
-                document.getElementById('monthlyTotal').textContent = formatNumber(data.summary.total_donations);
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Unable to load the monthly total.');
             }
+            return data;
         })
-        .catch(error => console.error('Error fetching monthly total:', error));
+        .then(data => {
+            if (data.success && data.data) {
+                selectedMonthDonationTotal = parseFloat(data.data.total_donations) || 0;
+                filterAvailableAllocationCategories(data.data.allocations || []);
+                updateAllocationAmountPreview();
+                return;
+            }
+
+            throw new Error('The monthly total response was invalid.');
+        })
+        .catch(error => {
+            selectedMonthDonationTotal = 0;
+            monthlyTotalElement.textContent = 'Unavailable';
+            console.error('Error fetching monthly total:', error);
+        });
+    }
+
+    const allocationPercentInput = document.getElementById('allocation_percent');
+    if (allocationPercentInput) {
+        allocationPercentInput.addEventListener('input', updateAllocationAmountPreview);
+        allocationPercentInput.addEventListener('change', updateAllocationAmountPreview);
     }
 
     // Allocation Modal
@@ -1338,6 +1443,7 @@
     if (openModalBtn) {
         openModalBtn.addEventListener('click', function() {
             resetAllocationForm();
+            editingAllocationCategoryId = null;
             document.getElementById('modalTitle').textContent = 'Add Allocation';
             document.getElementById('modalSubtitle').textContent = 'Create a new donation allocation';
             document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Save Allocation';
@@ -1348,12 +1454,13 @@
             updateMonthlyTotal();
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
+            syncBodyScrollLock();
         });
     }
 
     window.openEditAllocationModal = function(allocationId, month, categoryId, percent, notes) {
         resetAllocationForm();
+        editingAllocationCategoryId = String(categoryId);
         document.getElementById('modalTitle').textContent = 'Edit Allocation';
         document.getElementById('modalSubtitle').textContent = 'Update allocation details';
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-edit mr-2"></i> Update Allocation';
@@ -1367,11 +1474,13 @@
         updateMonthlyTotal();
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
+        syncBodyScrollLock();
     }
 
     function resetAllocationForm() {
         document.getElementById('allocationForm').reset();
+        editingAllocationCategoryId = null;
+        filterAvailableAllocationCategories();
         document.getElementById('allocation_month').value = new Date().toISOString().slice(0, 7);
         document.getElementById('formMethod').value = 'POST';
         document.getElementById('allocation_id').value = '';
@@ -1380,7 +1489,7 @@
     window.closeAllocationModal = function() {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
+        syncBodyScrollLock();
         const form = document.getElementById('allocationForm');
         if (form) form.reset();
     }
@@ -1513,7 +1622,7 @@
         openCategoriesBtn.addEventListener('click', function() {
             categoriesModal.classList.remove('hidden');
             categoriesModal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
+            syncBodyScrollLock();
             // Reset search and filter
             document.getElementById('categorySearch').value = '';
             document.getElementById('categoryStatusFilter').value = '';
@@ -1527,7 +1636,7 @@
     window.closeCategoriesModal = function() {
         categoriesModal.classList.add('hidden');
         categoriesModal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
+        syncBodyScrollLock();
     }
 
     if (categoriesModal) {
@@ -1567,18 +1676,19 @@
         const createCategoryModal = document.getElementById('createCategoryModal');
         createCategoryModal.classList.remove('hidden');
         createCategoryModal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
+        syncBodyScrollLock();
     }
 
     window.closeCreateCategoryModal = function() {
         const createCategoryModal = document.getElementById('createCategoryModal');
         createCategoryModal.classList.add('hidden');
         createCategoryModal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
+        syncBodyScrollLock();
         document.getElementById('createCategoryForm').reset();
         // Reset icon preview
         document.getElementById('selectedIconPreview').className = 'fas fa-hand-heart text-white text-2xl';
         document.getElementById('iconPreviewWrapper').style.backgroundColor = '#554994';
+        document.getElementById('colorValue').textContent = '#554994';
     }
 
     window.selectIcon = function(iconClass) {
@@ -1627,22 +1737,57 @@
     // Handle create category form submission
     const createCategoryForm = document.getElementById('createCategoryForm');
     if (createCategoryForm) {
-        createCategoryForm.addEventListener('submit', function(e) {
+        createCategoryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             const name = document.getElementById('alc_cat_name').value;
             const icon = document.getElementById('category_icon').value;
 
             if (!name) {
-                e.preventDefault();
                 Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please enter a category name.', confirmButtonColor: '#d33' });
                 return false;
             }
             if (!icon) {
-                e.preventDefault();
                 Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please select an icon.', confirmButtonColor: '#d33' });
                 return false;
             }
 
-            Swal.fire({ title: 'Creating...', text: 'Please wait while we create the category.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            const submitButton = createCategoryForm.querySelector('[type=submit]');
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(createCategoryForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new FormData(createCategoryForm)
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const validationMessage = data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : data.message;
+                    throw new Error(validationMessage || 'Failed to create category.');
+                }
+
+                closeCreateCategoryModal();
+                categoryCurrentPage = 1;
+                await loadCategories(1);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Created!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(syncBodyScrollLock);
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Creation Failed', text: error.message });
+            } finally {
+                submitButton.disabled = false;
+                syncBodyScrollLock();
+            }
         });
     }
 

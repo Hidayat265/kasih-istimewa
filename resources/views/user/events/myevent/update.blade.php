@@ -99,6 +99,18 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="event_description" class="block text-sm font-medium text-gray-700 mb-1">
+                            Event Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="event_description" id="event_description" rows="5" required
+                            class="basic-info-field w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary p-3 outline-none"
+                            placeholder="Describe the event and its objectives">{{ old('event_description', $event->event_description) }}</textarea>
+                        @error('event_description')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Event Location with Map Picker -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -170,10 +182,10 @@
                             Event Start Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="event_start_date" id="event_start_date"
-                            value="{{ old('event_start_date', $event->event_start_date) }}"
-                            min="{{ date('Y-m-d', strtotime('+10 days')) }}"
+                            value="{{ old('event_start_date', optional($event->event_start_date)->format('Y-m-d')) }}"
+                            min="{{ now()->format('Y-m-d') }}"
                             class="date-field w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary p-3 outline-none">
-                        <p class="text-xs text-gray-400 mt-1">Must be at least 10 days from today</p>
+                        <p class="text-xs text-gray-400 mt-1">Select today or any future date</p>
                         @error('event_start_date')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -184,7 +196,7 @@
                             Event End Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="event_end_date" id="event_end_date"
-                            value="{{ old('event_end_date', $event->event_end_date) }}"
+                            value="{{ old('event_end_date', optional($event->event_end_date)->format('Y-m-d')) }}"
                             class="date-field w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary p-3 outline-none">
                         <p class="text-xs text-gray-400 mt-1">Can be same as start date or later</p>
                         @error('event_end_date')
@@ -398,7 +410,7 @@
                         <i class="fas fa-info-circle text-blue-400 mt-0.5"></i>
                         <p class="text-sm text-blue-700 ml-3">
                             <strong>Note:</strong> After updating, your event will be reviewed again by our admin team.
-                            Events must be scheduled at least 10 days in advance.
+                            The event start date can be today or any future date.
                         </p>
                     </div>
                 </div>
@@ -432,10 +444,14 @@ let basicInfoValid = true;
 let dateSessionValid = true;
 let volunteerValid = true;
 
-let startDate = '{{ $event->event_start_date }}';
-let endDate = '{{ $event->event_end_date }}';
-let selectedStartSession = '{{ $event->event_start_session }}';
-let selectedEndSession = '{{ $event->event_end_session }}';
+let startDate = @json(old('event_start_date', optional($event->event_start_date)->format('Y-m-d')));
+let endDate = @json(old('event_end_date', optional($event->event_end_date)->format('Y-m-d')));
+let selectedStartSession = @json(old('event_start_session', $event->event_start_session));
+let selectedEndSession = @json(old('event_end_session', $event->event_end_session));
+const originalStartDate = @json(optional($event->event_start_date)->format('Y-m-d'));
+const originalEndDate = @json(optional($event->event_end_date)->format('Y-m-d'));
+const originalStartSession = @json($event->event_start_session);
+const originalEndSession = @json($event->event_end_session);
 let selectedSessions = [];
 let bookedSessionsByDate = {};
 let middleDateConflict = false;
@@ -461,6 +477,105 @@ function getBookedSessionsForDate(date) {
 function isFullyBookedDate(date) {
     return getBookedSessionsForDate(date).length === sessionOrder.length;
 }
+
+function getOriginalSessionsForDate(date) {
+    if (!date || date < originalStartDate || date > originalEndDate) {
+        return [];
+    }
+
+    const startIndex = sessionOrder.indexOf(originalStartSession);
+    const endIndex = sessionOrder.indexOf(originalEndSession);
+
+    if (originalStartDate === originalEndDate) {
+        return sessionOrder.slice(startIndex, endIndex + 1);
+    }
+    if (date === originalStartDate) {
+        return sessionOrder.slice(startIndex);
+    }
+    if (date === originalEndDate) {
+        return sessionOrder.slice(0, endIndex + 1);
+    }
+
+    return [...sessionOrder];
+}
+
+function setNextButtonState(buttonId, isValid) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    button.disabled = !isValid;
+    button.classList.toggle('opacity-50', !isValid);
+    button.classList.toggle('cursor-not-allowed', !isValid);
+}
+
+function validateBasicInfo() {
+    const fields = Array.from(document.querySelectorAll('.basic-info-field'));
+    basicInfoValid = fields.every(field => field.value.trim() !== '');
+    setNextButtonState('nextToTab2', basicInfoValid);
+    return basicInfoValid;
+}
+
+function validateDateSession() {
+    const hasValidDates = Boolean(startDate && endDate && endDate >= startDate);
+    const hasValidSessions = sessionOrder.includes(selectedStartSession)
+        && sessionOrder.includes(selectedEndSession);
+    const sessionRangeIsValid = !hasValidDates
+        || startDate !== endDate
+        || sessionOrder.indexOf(selectedStartSession) <= sessionOrder.indexOf(selectedEndSession);
+    let conflictMessage = '';
+
+    if (hasValidDates && hasValidSessions && sessionRangeIsValid) {
+        const startIndex = sessionOrder.indexOf(selectedStartSession);
+        const endIndex = sessionOrder.indexOf(selectedEndSession);
+
+        if (startDate === endDate) {
+            const bookedInRange = sessionOrder
+                .slice(startIndex, endIndex + 1)
+                .filter(session => getBookedSessionsForDate(startDate).includes(session));
+
+            if (bookedInRange.length > 0) {
+                conflictMessage = `The session range must be continuous, but ${bookedInRange.join(', ')} is already booked.`;
+            }
+        } else {
+            const bookedAtStart = sessionOrder
+                .slice(startIndex)
+                .filter(session => getBookedSessionsForDate(startDate).includes(session));
+            const bookedAtEnd = sessionOrder
+                .slice(0, endIndex + 1)
+                .filter(session => getBookedSessionsForDate(endDate).includes(session));
+
+            if (bookedAtStart.length > 0) {
+                conflictMessage = `The continuous range includes booked session(s) on ${startDate}: ${bookedAtStart.join(', ')}.`;
+            } else if (middleDateConflict) {
+                conflictMessage = 'The continuous range includes a booked session on an intermediate date.';
+            } else if (bookedAtEnd.length > 0) {
+                conflictMessage = `The continuous range includes booked session(s) on ${endDate}: ${bookedAtEnd.join(', ')}.`;
+            }
+        }
+    }
+
+    dateSessionValid = hasValidDates
+        && hasValidSessions
+        && sessionRangeIsValid
+        && conflictMessage === '';
+
+    const warning = document.getElementById('sessionConflictWarning');
+    const message = document.getElementById('conflictMessage');
+    if (conflictMessage) {
+        if (message) message.textContent = conflictMessage;
+        warning?.classList.remove('hidden');
+    } else if (sessionRangeIsValid) {
+        warning?.classList.add('hidden');
+    }
+
+    setNextButtonState('nextToTab3', dateSessionValid);
+    return dateSessionValid;
+}
+
+document.querySelectorAll('.basic-info-field').forEach(field => {
+    field.addEventListener('input', validateBasicInfo);
+    field.addEventListener('change', validateBasicInfo);
+});
 
 // ─── Tab Switching ────────────────────────────────────────────────────────────
 const tabs = document.querySelectorAll('.tab-btn');
@@ -517,10 +632,25 @@ async function loadBookedSessionsForRange(start, end) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ start_date: start, end_date: end })
+            body: JSON.stringify({
+                start_date: start,
+                end_date: end,
+                exclude_event_id: @json($event->event_id)
+            })
         });
         const data = await res.json();
-        return data.booked_sessions || {};
+        const bookedMap = data.booked_sessions || {};
+
+        // Existing slots belonging to this event remain editable even if legacy
+        // data contains another overlapping event. Newly added slots stay booked.
+        Object.keys(bookedMap).forEach(date => {
+            const originalSessions = getOriginalSessionsForDate(date);
+            bookedMap[date] = bookedMap[date].filter(
+                session => !originalSessions.includes(session)
+            );
+        });
+
+        return bookedMap;
     } catch (e) {
         console.error('Error loading booked sessions:', e);
         return {};
@@ -600,18 +730,33 @@ function updateVisualTimeline() {
     document.getElementById('sessionConflictWarning').classList.add('hidden');
     document.getElementById('visualTimeline').classList.remove('hidden');
 
+    function sessionRow(session, date) {
+        const booked = getBookedSessionsForDate(date).includes(session);
+        const color = booked ? 'bg-red-100 border-red-500' : 'bg-green-50 border-green-500';
+        const label = booked ? 'Booked' : 'Included';
+        const textColor = booked ? 'text-red-600' : 'text-green-600';
+
+        return `<div class="px-3 py-2 ${color} border-l-4 mb-1 rounded flex justify-between items-center">
+                    <div>
+                        <span class="font-semibold">${session}</span>
+                        <span class="text-xs text-gray-500 ml-2">${startTimes[session]} - ${endTimes[session]}</span>
+                    </div>
+                    <span class="text-xs ${textColor}">${label}</span>
+                </div>`;
+    }
+
     let html = '<div class="border rounded-lg overflow-hidden">';
     if (isSameDate) {
         html += `<div class="bg-gray-100 px-3 py-2 font-semibold text-sm"><i class="fas fa-calendar-day mr-1"></i> ${startDate}</div><div class="p-2">`;
         for (let i = startIndex; i <= endIndex; i++) {
             const session = sessionOrder[i];
-            html += `<div class="px-3 py-2 bg-green-50 border-l-4 border-green-500 mb-1 rounded flex justify-between"><span class="font-semibold">${session}</span><span class="text-xs text-green-600">✅ Included</span></div>`;
+            html += sessionRow(session, startDate);
         }
         html += '</div>';
     } else {
         html += `<div class="bg-gray-100 px-3 py-2 font-semibold text-sm"><i class="fas fa-calendar-alt mr-1"></i> ${startDate} – ${endDate}</div>`;
         html += `<div class="p-2 bg-blue-50 border-l-4 border-blue-500 m-2 rounded"><div class="font-semibold mb-1">📅 ${startDate} (Start)</div>`;
-        sessionOrder.slice(startIndex).forEach(s => { html += `<div class="px-3 py-1 text-sm">${s}</div>`; });
+        sessionOrder.slice(startIndex).forEach(session => { html += sessionRow(session, startDate); });
         html += '</div>';
         const cur = new Date(startDate);
         const fin = new Date(endDate);
@@ -619,12 +764,12 @@ function updateVisualTimeline() {
         while (cur < fin) {
             const ds = cur.toISOString().split('T')[0];
             html += `<div class="p-2 bg-yellow-50 border-l-4 border-yellow-500 m-2 rounded"><div class="font-semibold mb-1">📅 ${ds} (Full day)</div>`;
-            sessionOrder.forEach(s => { html += `<div class="px-3 py-1 text-sm">${s}</div>`; });
+            sessionOrder.forEach(session => { html += sessionRow(session, ds); });
             html += '</div>';
             cur.setDate(cur.getDate() + 1);
         }
         html += `<div class="p-2 bg-green-50 border-l-4 border-green-500 m-2 rounded"><div class="font-semibold mb-1">📅 ${endDate} (End)</div>`;
-        sessionOrder.slice(0, endIndex + 1).forEach(s => { html += `<div class="px-3 py-1 text-sm">${s}</div>`; });
+        sessionOrder.slice(0, endIndex + 1).forEach(session => { html += sessionRow(session, endDate); });
         html += '</div>';
     }
     html += '</div>';
@@ -673,6 +818,7 @@ document.querySelectorAll('.start-session-box').forEach(box => {
                 }
             });
             updateVisualTimeline();
+            validateDateSession();
             return;
         }
         
@@ -683,6 +829,7 @@ document.querySelectorAll('.start-session-box').forEach(box => {
         selectedStartSession = session;
         document.getElementById('event_start_session').value = session;
         if (selectedEndSession) updateVisualTimeline();
+        validateDateSession();
     });
 });
 
@@ -696,6 +843,7 @@ document.querySelectorAll('.end-session-box').forEach(box => {
         selectedEndSession = box.getAttribute('data-session');
         document.getElementById('event_end_session').value = selectedEndSession;
         if (selectedStartSession) updateVisualTimeline();
+        validateDateSession();
     });
 });
 
@@ -704,23 +852,105 @@ const startDateInput = document.getElementById('event_start_date');
 const endDateInput = document.getElementById('event_end_date');
 
 async function onDateChange() {
+    const previousStartDate = startDate;
+    const previousEndDate = endDate;
     startDate = startDateInput.value;
     endDate = endDateInput.value;
-    if (!startDate || !endDate) return;
-    if (endDate < startDate) { endDateInput.value = startDate; endDate = startDate; }
-    
-    // Reset selections for new dates
-    const isSameDate = startDate === endDate;
-    if (isSameDate) {
-        selectedSessions = [];
-        selectedStartSession = selectedEndSession = null;
-        document.getElementById('event_start_session').value = '';
-        document.getElementById('event_end_session').value = '';
+    if (!startDate || !endDate) {
+        validateDateSession();
+        return;
     }
+    if (endDate < startDate) { endDateInput.value = startDate; endDate = startDate; }
+    const datesChanged = startDate !== previousStartDate || endDate !== previousEndDate;
     
     const bookedMap = await loadBookedSessionsForRange(startDate, endDate);
     updateSessionAvailability(bookedMap);
-    document.getElementById('visualTimeline').classList.add('hidden');
+
+    const isSameDate = startDate === endDate;
+    if (datesChanged) {
+        const isOriginalSchedule = startDate === originalStartDate
+            && endDate === originalEndDate;
+
+        if (isOriginalSchedule) {
+            selectedStartSession = originalStartSession;
+            selectedEndSession = originalEndSession;
+            document.getElementById('event_start_session').value = selectedStartSession;
+            document.getElementById('event_end_session').value = selectedEndSession;
+
+            if (isSameDate) {
+                const startIndex = sessionOrder.indexOf(selectedStartSession);
+                const endIndex = sessionOrder.indexOf(selectedEndSession);
+                selectedSessions = sessionOrder.slice(startIndex, endIndex + 1);
+            } else {
+                selectedSessions = [];
+            }
+
+            document.querySelectorAll('.start-session-box').forEach(box => {
+                const session = box.getAttribute('data-session');
+                const selected = isSameDate
+                    ? selectedSessions.includes(session)
+                    : session === selectedStartSession;
+                box.classList.toggle('selected', selected);
+                box.classList.toggle('border-blue-500', selected);
+                box.classList.toggle('bg-blue-100', selected);
+            });
+            document.querySelectorAll('.end-session-box').forEach(box => {
+                const selected = !isSameDate
+                    && box.getAttribute('data-session') === selectedEndSession;
+                box.classList.toggle('selected', selected);
+                box.classList.toggle('border-blue-500', selected);
+                box.classList.toggle('bg-blue-100', selected);
+            });
+
+            updateSessionAvailability(bookedMap);
+            updateVisualTimeline();
+            validateDateSession();
+            return;
+        }
+
+        selectedSessions = [];
+        selectedStartSession = null;
+        selectedEndSession = null;
+        document.getElementById('event_start_session').value = '';
+        document.getElementById('event_end_session').value = '';
+        document.querySelectorAll('.start-session-box, .end-session-box').forEach(box => {
+            box.classList.remove('selected', 'border-blue-500', 'bg-blue-100');
+        });
+        updateSessionAvailability(bookedMap);
+        document.getElementById('visualTimeline').classList.add('hidden');
+        validateDateSession();
+        return;
+    }
+
+    if (isSameDate && selectedStartSession && selectedEndSession) {
+        const startIndex = sessionOrder.indexOf(selectedStartSession);
+        const endIndex = sessionOrder.indexOf(selectedEndSession);
+        selectedSessions = sessionOrder.slice(
+            Math.min(startIndex, endIndex),
+            Math.max(startIndex, endIndex) + 1
+        );
+    }
+
+    document.querySelectorAll('.start-session-box').forEach(box => {
+        const session = box.getAttribute('data-session');
+        const selected = isSameDate
+            ? selectedSessions.includes(session)
+            : session === selectedStartSession;
+        box.classList.toggle('selected', selected);
+        box.classList.toggle('border-blue-500', selected);
+        box.classList.toggle('bg-blue-100', selected);
+    });
+
+    document.querySelectorAll('.end-session-box').forEach(box => {
+        const selected = !isSameDate
+            && box.getAttribute('data-session') === selectedEndSession;
+        box.classList.toggle('selected', selected);
+        box.classList.toggle('border-blue-500', selected);
+        box.classList.toggle('bg-blue-100', selected);
+    });
+
+    updateVisualTimeline();
+    validateDateSession();
 }
 
 if (startDateInput) {
@@ -754,6 +984,8 @@ function validateVolunteer() {
             volunteerField?.classList.remove('border-red-500');
         }
     }
+
+    setNextButtonState('nextToTab4', volunteerValid);
 }
 if (volunteerField) {
     volunteerField.addEventListener('input', validateVolunteer);
@@ -855,12 +1087,21 @@ function getCurrentLocation() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    validateBasicInfo();
+    validateDateSession();
+    validateVolunteer();
     setTimeout(initMap, 200);
     document.getElementById('search_btn')?.addEventListener('click', searchLocation);
     document.getElementById('current_location_btn')?.addEventListener('click', getCurrentLocation);
     document.getElementById('location_search')?.addEventListener('keypress', e => { if (e.key === 'Enter') searchLocation(); });
     
+    // Load availability without counting the event currently being edited.
+    if (startDate && endDate) {
+        const bookedMap = await loadBookedSessionsForRange(startDate, endDate);
+        updateSessionAvailability(bookedMap);
+    }
+
     // Initialize session selections display
     if (isSameDateInit && selectedSessions.length > 0) {
         document.querySelectorAll('.start-session-box').forEach(box => {
@@ -887,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateVisualTimeline();
     }
+    validateDateSession();
 });
 </script>
 @endpush

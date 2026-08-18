@@ -49,7 +49,7 @@
                 <i class="fas fa-map-marker-alt mr-2"></i> Shah Alam, Malaysia
             </p>
             <p class="mt-2 text-xs text-gray-500">
-                Making a difference in our community through compassion and action.
+                Making a difference in special needs lives.
             </p>
         </div>
     </div>

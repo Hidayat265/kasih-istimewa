@@ -133,6 +133,7 @@ class DonationAllocation extends Model
             'allocations' => $allocations->map(function ($allocation) {
 
                 return [
+                    'category_id' => $allocation->allocation_category_id,
                     'category_name' =>
                         $allocation->category?->alc_cat_name ?? 'Unknown',
 

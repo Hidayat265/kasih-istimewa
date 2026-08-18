@@ -4,6 +4,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Name</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 </tr>
@@ -12,6 +13,17 @@
                 @foreach($events as $event)
                     <tr>
                         <td class="px-4 py-2 text-sm text-gray-900">{{ $event->event_name }}</td>
+                        <td class="px-4 py-2 text-sm">
+                            @if($event->event_created_by_id === $user->user_id)
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                                    <i class="fas fa-calendar-plus mr-1"></i>Created
+                                </span>
+                            @else
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                    <i class="fas fa-user-check mr-1"></i>Participated
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-4 py-2 text-sm text-gray-500">{{ $event->event_start_date ? \Carbon\Carbon::parse($event->event_start_date)->format('d M Y') : 'N/A' }}</td>
                         <td class="px-4 py-2 text-sm">
                             <span class="px-2 py-1 text-xs rounded-full 

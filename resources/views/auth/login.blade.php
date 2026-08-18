@@ -109,6 +109,38 @@
                     </button>
                 </form>
 
+                @env(['local', 'testing'])
+                    <div class="mt-6 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                        <div class="mb-3 flex items-center gap-2">
+                            <i class="fas fa-flask text-primary"></i>
+                            <p class="text-sm font-bold text-gray-800">Local demo accounts</p>
+                        </div>
+                        <p class="mb-3 text-xs text-gray-500">Select an account to fill in its login credentials.</p>
+
+                        <div class="space-y-2 text-xs">
+                            <button type="button" data-demo-email="admin1@kasihistimewa.my" data-demo-password="11111111"
+                                class="demo-account-btn flex w-full items-center justify-between gap-3 rounded-xl border border-purple-200 bg-white p-3 text-left transition hover:border-primary hover:bg-purple-50">
+                                <span>
+                                    <span class="block font-bold text-primary">Administrator demo</span>
+                                    <span class="block break-all text-gray-600">Email: admin1@kasihistimewa.my</span>
+                                    <span class="block text-gray-500">Password: 11111111</span>
+                                </span>
+                                <span class="shrink-0 font-bold text-primary"><i class="fas fa-arrow-pointer mr-1"></i>Use</span>
+                            </button>
+
+                            <button type="button" data-demo-email="dieyard.dhr@gmail.com" data-demo-password="11111111"
+                                class="demo-account-btn flex w-full items-center justify-between gap-3 rounded-xl border border-pink-200 bg-white p-3 text-left transition hover:border-secondary hover:bg-pink-50">
+                                <span>
+                                    <span class="block font-bold text-secondary">Regular user demo</span>
+                                    <span class="block break-all text-gray-600">Email: dieyard.dhr@gmail.com</span>
+                                    <span class="block text-gray-500">Password: 11111111</span>
+                                </span>
+                                <span class="shrink-0 font-bold text-secondary"><i class="fas fa-arrow-pointer mr-1"></i>Use</span>
+                            </button>
+                        </div>
+                    </div>
+                @endenv
+
                 <div class="my-7 flex items-center gap-4"><span class="h-px flex-1 bg-gray-200"></span><span class="text-xs font-medium uppercase tracking-wider text-gray-400">New here?</span><span class="h-px flex-1 bg-gray-200"></span></div>
                 <a href="{{ route('register') }}" class="flex h-13 w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-sm font-bold text-gray-700 transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10">
                     Create your free account <i class="fas fa-sparkles text-secondary"></i>
@@ -131,6 +163,14 @@
         togglePassword.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
         togglePassword.setAttribute('aria-pressed', String(!showing));
         togglePassword.querySelector('i').className = showing ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+
+    document.querySelectorAll('.demo-account-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('email').value = button.dataset.demoEmail;
+            passwordInput.value = button.dataset.demoPassword;
+            document.getElementById('email').focus();
+        });
     });
 
     document.getElementById('loginForm')?.addEventListener('submit', function () {

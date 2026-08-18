@@ -9,46 +9,71 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ParticipantCancelled;
+use Carbon\Carbon;
 
 class ParticipantController extends Controller
 {
+    /**
+     * Expand an event into the date/session slots that it occupies.
+     */
+    private function eventSlots(Event $event): array
+    {
+        $sessionOrder = ['Morning', 'Afternoon', 'Evening'];
+        $startDate = Carbon::parse($event->event_start_date)->startOfDay();
+        $endDate = Carbon::parse($event->event_end_date ?? $event->event_start_date)->startOfDay();
+        $startSession = array_search($event->event_start_session, $sessionOrder, true);
+        $endSession = array_search($event->event_end_session ?? $event->event_start_session, $sessionOrder, true);
+
+        // Invalid legacy session values must not turn into index 0 and create a false conflict.
+        if ($startSession === false || $endSession === false || $endDate->lt($startDate)) {
+            return [];
+        }
+
+        $slots = [];
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $firstSession = $date->equalTo($startDate) ? $startSession : 0;
+            $lastSession = $date->equalTo($endDate) ? $endSession : count($sessionOrder) - 1;
+
+            for ($index = $firstSession; $index <= $lastSession; $index++) {
+                $slots[$date->format('Y-m-d') . '|' . $sessionOrder[$index]] = true;
+            }
+        }
+
+        return $slots;
+    }
+
     // Check if user has conflicting events
     private function hasTimeConflict($userId, $newEvent)
     {
-        // Get all user's confirmed upcoming registrations
+        $newEventSlots = $this->eventSlots($newEvent);
+
+        // Only registrations whose event date range can overlap need to be checked.
         $userRegistrations = Participant::with('event')
             ->where('user_id', $userId)
             ->where('participant_status', 'confirmed')
-            ->whereHas('event', function($query) {
-                $query->where('event_start_date', '>=', now());
+            ->whereHas('event', function($query) use ($newEvent) {
+                $newStartDate = $newEvent->event_start_date;
+                $newEndDate = $newEvent->event_end_date ?? $newEvent->event_start_date;
+
+                $query->where('event_start_date', '<=', $newEndDate)
+                    ->whereRaw('COALESCE(event_end_date, event_start_date) >= ?', [$newStartDate]);
             })
             ->get();
-        
+
         foreach ($userRegistrations as $registration) {
             $registeredEvent = $registration->event;
-            
-            // Check if dates overlap
-            $newStart = strtotime($newEvent->event_start_date);
-            $newEnd = strtotime($newEvent->event_end_date);
-            $registeredStart = strtotime($registeredEvent->event_start_date);
-            $registeredEnd = strtotime($registeredEvent->event_end_date);
-            
-            // Check if date ranges overlap
-            if ($newStart <= $registeredEnd && $newEnd >= $registeredStart) {
-                // Dates overlap, now check session times
-                $sessionsOrder = ['Morning', 'Afternoon', 'Evening'];
-                $newStartIndex = array_search($newEvent->event_start_session, $sessionsOrder);
-                $newEndIndex = array_search($newEvent->event_end_session, $sessionsOrder);
-                $registeredStartIndex = array_search($registeredEvent->event_start_session, $sessionsOrder);
-                $registeredEndIndex = array_search($registeredEvent->event_end_session, $sessionsOrder);
-                
-                // Check if sessions overlap
-                if ($newStartIndex <= $registeredEndIndex && $newEndIndex >= $registeredStartIndex) {
-                    return [
-                        'conflict' => true,
-                        'conflicting_event' => $registeredEvent
-                    ];
-                }
+
+            $overlappingSlots = array_keys(array_intersect_key(
+                $newEventSlots,
+                $this->eventSlots($registeredEvent)
+            ));
+
+            if ($overlappingSlots) {
+                return [
+                    'conflict' => true,
+                    'conflicting_event' => $registeredEvent,
+                    'overlapping_slots' => $overlappingSlots,
+                ];
             }
         }
         
@@ -98,12 +123,12 @@ class ParticipantController extends Controller
             
             $existingRegistration = Participant::where('event_id', $eventId)
                 ->where('user_id', auth()->user()->user_id)
-                ->where('participant_status', '!=', 'cancelled')
                 ->first();
             
-            if ($existingRegistration) {
+            if ($existingRegistration && $existingRegistration->participant_status !== 'cancelled') {
                 return response()->json([
                     'success' => false,
+                    'error_code' => 'already_registered',
                     'message' => 'You have already registered for this event.'
                 ], 400);
             }
@@ -112,28 +137,58 @@ class ParticipantController extends Controller
             
             if ($conflictCheck['conflict']) {
                 $conflictingEvent = $conflictCheck['conflicting_event'];
+                $overlappingSessions = collect($conflictCheck['overlapping_slots'])
+                    ->map(fn ($slot) => explode('|', $slot, 2)[1])
+                    ->unique()
+                    ->implode(', ');
                 $conflictMessage = sprintf(
-                    'You cannot register for this event because it conflicts with "%s" which runs from %s to %s.',
+                    'Schedule conflict: %s runs on %s from %s to %s. The selected event runs on %s from %s to %s. Both events use the %s session.',
                     $conflictingEvent->event_name,
-                    $conflictingEvent->event_start_date . ' (' . $conflictingEvent->event_start_session . ')',
-                    $conflictingEvent->event_end_date . ' (' . $conflictingEvent->event_end_session . ')'
+                    Carbon::parse($conflictingEvent->event_start_date)->format('l, F j, Y'),
+                    $conflictingEvent->start_session_time,
+                    $conflictingEvent->end_session_time,
+                    Carbon::parse($event->event_start_date)->format('l, F j, Y'),
+                    $event->start_session_time,
+                    $event->end_session_time,
+                    $overlappingSessions
                 );
-                
+
                 return response()->json([
                     'success' => false,
-                    'message' => $conflictMessage
+                    'error_code' => 'schedule_conflict',
+                    'message' => $conflictMessage,
+                    'conflict' => [
+                        'event_id' => $conflictingEvent->event_id,
+                        'event_name' => $conflictingEvent->event_name,
+                        'overlapping_sessions' => $overlappingSessions,
+                    ],
                 ], 409);
             }
             
             DB::beginTransaction();
             
-            $participant = Participant::create([
-                'event_id' => $eventId,
-                'user_id' => auth()->user()->user_id,
+            $registrationData = [
                 'participant_status' => 'confirmed',
                 'participant_registered_at' => now(),
                 'participant_confirmed_at' => now(),
-            ]);
+                'participant_cancelled_at' => null,
+                'participant_cancellation_reason' => null,
+            ];
+
+            if ($existingRegistration) {
+                Participant::where('event_id', $eventId)
+                    ->where('user_id', auth()->user()->user_id)
+                    ->update($registrationData);
+
+                $participant = Participant::where('event_id', $eventId)
+                    ->where('user_id', auth()->user()->user_id)
+                    ->firstOrFail();
+            } else {
+                $participant = Participant::create(array_merge($registrationData, [
+                    'event_id' => $eventId,
+                    'user_id' => auth()->user()->user_id,
+                ]));
+            }
             
             $event->updateVolunteerCount(1);
             
@@ -155,6 +210,7 @@ class ParticipantController extends Controller
             Log::error('Participant registration failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
+                'error_code' => 'server_error',
                 'message' => 'Failed to register. Please try again later.'
             ], 500);
         }

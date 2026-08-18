@@ -104,7 +104,7 @@ class EventController extends Controller
         return $this->sessionOrder();
     }
 
-    private function buildBookedSessionsMap(string $startDate, string $endDate): array
+    private function buildBookedSessionsMap(string $startDate, string $endDate, ?string $excludeEventId = null): array
     {
         $map = [];
         $current = Carbon::parse($startDate);
@@ -116,6 +116,7 @@ class EventController extends Controller
         }
 
         $events = Event::where('event_approval_status', '!=', 'Rejected')
+            ->when($excludeEventId, fn ($query) => $query->where('event_id', '!=', $excludeEventId))
             ->where('event_start_date', '<=', $endDate)
             ->where('event_end_date', '>=', $startDate)
             ->get();
@@ -193,10 +194,23 @@ class EventController extends Controller
     // Get booked sessions for a date range
     public function getBookedSessionsForRange(Request $request)
     {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'exclude_event_id' => 'nullable|string',
+        ]);
+
         $startDate = Carbon::parse($request->start_date)->format('Y-m-d');
         $endDate = Carbon::parse($request->end_date)->format('Y-m-d');
+        $excludeEventId = null;
 
-        $bookedMap = $this->buildBookedSessionsMap($startDate, $endDate);
+        if ($request->filled('exclude_event_id') && auth()->check()) {
+            $excludeEventId = Event::where('event_id', $request->exclude_event_id)
+                ->where('event_created_by_id', auth()->user()->user_id)
+                ->value('event_id');
+        }
+
+        $bookedMap = $this->buildBookedSessionsMap($startDate, $endDate, $excludeEventId);
 
         return response()->json([
             'booked_sessions' => $bookedMap,
@@ -206,12 +220,20 @@ class EventController extends Controller
     // Get upcoming events for the index page
     public function index()
     {
+        $registeredEventIds = auth()->check()
+            ? Participant::where('user_id', auth()->user()->user_id)
+                ->where('participant_status', 'confirmed')
+                ->pluck('event_id')
+                ->flip()
+                ->all()
+            : [];
+
         $events = Event::where('event_approval_status', 'Approved')
             ->where('event_publish', true)
             ->where('event_start_date', '>=', Carbon::now()->subDays(1))
             ->orderBy('event_start_date', 'asc')
             ->get()
-            ->map(function ($event) {
+            ->map(function ($event) use ($registeredEventIds) {
                 $organizerName = $event->creator ? $event->creator->user_name : 'Unknown Organizer';
                 
                 return (object)[
@@ -228,6 +250,9 @@ class EventController extends Controller
                     'image' => $event->event_picture,
                     'max_volunteers' => $event->event_maximum_participant,
                     'registered_volunteers' => $event->event_current_participant,
+                    'is_registered' => isset($registeredEventIds[$event->event_id]),
+                    'is_owned' => auth()->check()
+                        && $event->event_created_by_id === auth()->user()->user_id,
                 ];
             });
 
@@ -297,7 +322,7 @@ class EventController extends Controller
             'event_name' => 'required|string|max:255',
             'event_description' => 'required|string|max:5000',
             'event_location_name' => 'required|string|max:500',
-            'event_start_date' => 'required|date|after_or_equal:' . now()->addDays(10)->format('Y-m-d'),
+            'event_start_date' => 'required|date|after_or_equal:' . now()->format('Y-m-d'),
             'event_end_date' => 'required|date|after_or_equal:event_start_date',
             'event_start_session' => 'required|in:Morning,Afternoon,Evening',
             'event_end_session' => 'required|in:Morning,Afternoon,Evening',
@@ -312,6 +337,13 @@ class EventController extends Controller
         $endSession = $request->event_end_session;
         
         $requestedSlots = $this->buildEventSlots($startDate, $endDate, $startSession, $endSession);
+        $originalSlots = $this->buildEventSlots(
+            Carbon::parse($event->event_start_date)->format('Y-m-d'),
+            Carbon::parse($event->event_end_date)->format('Y-m-d'),
+            $event->event_start_session,
+            $event->event_end_session
+        );
+        $slotsToValidate = array_values(array_diff($requestedSlots, $originalSlots));
         
         $conflictingEvents = Event::where('event_approval_status', '!=', 'Rejected')
             ->where('event_id', '!=', $event->event_id)
@@ -319,7 +351,7 @@ class EventController extends Controller
             ->where('event_end_date', '>=', $startDate)
             ->get();
 
-        if ($this->hasSlotConflict($requestedSlots, $conflictingEvents)) {
+        if ($this->hasSlotConflict($slotsToValidate, $conflictingEvents)) {
             return back()->withErrors(['event_start_date' => 'The selected date and session range overlaps with an existing event.'])->withInput();
         }
 

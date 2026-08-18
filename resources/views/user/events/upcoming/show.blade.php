@@ -343,9 +343,13 @@
                     },
                     body: JSON.stringify({ accept_terms: true })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                .then(async response => ({
+                    ok: response.ok,
+                    status: response.status,
+                    data: await response.json()
+                }))
+                .then(({ ok, status, data }) => {
+                    if (ok && data.success) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Registered!',
@@ -357,8 +361,10 @@
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Registration Failed',
-                            text: data.message,
+                            title: status === 409 && data.error_code === 'schedule_conflict'
+                                ? 'Schedule Conflict'
+                                : 'Registration Failed',
+                            text: data.message || 'Unable to register for this event.',
                             confirmButtonColor: '#d33'
                         });
                     }
