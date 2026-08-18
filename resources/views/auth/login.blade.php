@@ -109,11 +109,10 @@
                     </button>
                 </form>
 
-                @env(['local', 'testing'])
                     <div class="mt-6 rounded-2xl border border-primary/15 bg-primary/5 p-4">
                         <div class="mb-3 flex items-center gap-2">
                             <i class="fas fa-flask text-primary"></i>
-                            <p class="text-sm font-bold text-gray-800">Local demo accounts</p>
+                            <p class="text-sm font-bold text-gray-800">Demo accounts</p>
                         </div>
                         <p class="mb-3 text-xs text-gray-500">Select an account to fill in its login credentials.</p>
 
@@ -139,7 +138,6 @@
                             </button>
                         </div>
                     </div>
-                @endenv
 
                 <div class="my-7 flex items-center gap-4"><span class="h-px flex-1 bg-gray-200"></span><span class="text-xs font-medium uppercase tracking-wider text-gray-400">New here?</span><span class="h-px flex-1 bg-gray-200"></span></div>
                 <a href="{{ route('register') }}" class="flex h-13 w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-sm font-bold text-gray-700 transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10">

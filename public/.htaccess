@@ -5,6 +5,23 @@
 
     RewriteEngine On
 
+    # ==========================================
+    # Kasih Istimewa - Force WWW + HTTPS
+    # ==========================================
+
+    # Redirect non-WWW domain to HTTPS + WWW
+    RewriteCond %{HTTP_HOST} ^kasihistimewa\.my$ [NC]
+    RewriteRule ^ https://www.kasihistimewa.my%{REQUEST_URI} [R=301,L]
+
+    # Force HTTPS on WWW domain
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^www\.kasihistimewa\.my$ [NC]
+    RewriteRule ^ https://www.kasihistimewa.my%{REQUEST_URI} [R=301,L]
+
+    # ==========================================
+    # Laravel
+    # ==========================================
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
